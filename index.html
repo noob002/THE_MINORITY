@@ -27,7 +27,6 @@
             transition: color 1s ease;
         }
 
-        /* 테마 클래스 */
         body.mode-green { --main-color: #33ff33; }
         body.mode-yellow { --main-color: #ffcc00; }
         body.mode-red { --main-color: #ff3333; }
@@ -58,7 +57,6 @@
         }
         @keyframes scanline { 0% { bottom: 100%; } 100% { bottom: -100%; } }
 
-        /* UI */
         .header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--main-color); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.4rem; }
         .content-area { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; width: 100%; }
 
@@ -70,11 +68,10 @@
         button:hover { background-color: var(--main-color); color: #000; }
         
         #skip-btn { display: none; border-style: dashed; font-size: 1.2rem; margin-top: 10px; opacity: 0.7; }
+        #fail-count-display { font-size: 0.9rem; margin-top: 5px; opacity: 0.5; }
 
-        /* Phases */
         #screen-phase1, #screen-phase2, #screen-phase3, #screen-end { display: none; width: 100%; text-align: center; }
 
-        /* Styles */
         .question-text { font-size: 2rem; min-height: 80px; margin-bottom: 30px; }
         .result-bar-bg { width: 100%; height: 20px; background: #111; border: 1px solid var(--main-color); margin-top: 20px; display: none; }
         .result-bar-fill { height: 100%; background: var(--main-color); width: 0%; transition: width 0.5s; }
@@ -92,7 +89,6 @@
             text-shadow: 0 0 10px #fff; display: none; pointer-events: none;
         }
 
-        /* ENDING */
         #screen-end { position: relative; height: 100%; }
         #end-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
         .end-content { position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; height: 100%; }
@@ -158,6 +154,8 @@
                 <div class="end-content">
                     <h1 class="shine-text" id="end-title">ALL CLEAR</h1>
                     <p id="end-desc" style="font-size: 1.5rem; margin-top: 20px;">...</p>
+                    <div id="fail-count-display"></div>
+                    
                     <button id="reboot-btn" onclick="location.reload()" style="margin-top: 40px;">SYSTEM REBOOT</button>
                     <button id="skip-btn" onclick="skipToEnding()">>> SKIP TO ENDING >></button>
                 </div>
@@ -166,7 +164,7 @@
     </div>
 
     <script>
-        /* ================= UTILS ================= */
+        /* ================= FIXED UTILS (LocalStorage) ================= */
         function showScreen(id) {
             ['screen-start','screen-phase1','screen-phase2','screen-phase3','screen-end']
                 .forEach(s => document.getElementById(s).style.display = 'none');
@@ -174,7 +172,9 @@
         }
         function setTheme(mode) { document.body.className = `mode-${mode}`; }
 
-        let failCount = 0; 
+        // [중요 수정] 새로고침해도 기억하도록 localStorage 사용
+        // 저장된 실패 횟수 불러오기 (없으면 0)
+        let failCount = parseInt(localStorage.getItem('minority_fail_count')) || 0;
 
         /* ================= PHASE 1 ================= */
         const questions = [
@@ -258,7 +258,7 @@
             }
         }
 
-        /* ================= PHASE 3: DODGE (SUPER EASY) ================= */
+        /* ================= PHASE 3 (SUPER EASY) ================= */
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let gameLoopId;
@@ -374,7 +374,6 @@
 
             if (!currentPhase.includes('break')) spawnPattern(currentPhase);
 
-            // 경고선
             for (let i = warnings.length - 1; i >= 0; i--) {
                 let w = warnings[i];
                 w.timer--;
@@ -383,14 +382,12 @@
                     ctx.strokeStyle = (Math.floor(Date.now() / 50) % 2 === 0) ? "#ffcc00" : "#554400";
                     ctx.lineWidth = 2; ctx.moveTo(w.x, 0); ctx.lineTo(w.x, canvas.height); ctx.stroke(); ctx.restore();
                 } else {
-                    // [대폭 하향] 미사일 속도: 이전 10~18 -> 지금 5~6
                     let missileSpeed = (currentPhase === 'red') ? 6 : 5; 
                     enemies.push({ x: w.x - (w.width/2), y: -50, size: w.width, speed: missileSpeed, type: 'blitz', color: '#ff0000' });
                     warnings.splice(i, 1);
                 }
             }
 
-            // 적 이동
             for (let i = 0; i < enemies.length; i++) {
                 let e = enemies[i];
                 e.y += e.speed;
@@ -415,9 +412,7 @@
             } else if (phase === 'yellow') {
                 if (Math.random() < 0.04) warnings.push({ x: Math.random() * canvas.width, width: 25, timer: 90, active: true });
             } else if (phase === 'red') {
-                // [대폭 하향] 생성 확률 5%, 경고 시간 100프레임 (약 1.6초, 아주 여유로움)
                 if (Math.random() < 0.05) warnings.push({ x: Math.random() * canvas.width, width: 30, timer: 100, active: true });
-                // [대폭 하향] 생성 확률 8%, 속도 2~4 (아주 느림)
                 if (Math.random() < 0.08) enemies.push({ x: Math.random() * canvas.width, y: -20, size: Math.random() * 15 + 10, speed: (Math.random() * 2 + 2), type: 'normal', color: '#ff3333' });
             }
         }
@@ -426,6 +421,8 @@
         
         function failGame(title, desc) {
             failCount++; 
+            // [중요] 죽을 때마다 횟수 저장
+            localStorage.setItem('minority_fail_count', failCount);
             
             showScreen('screen-end');
             setTheme('red');
@@ -437,7 +434,11 @@
             titleEl.style.color = "red";
             
             document.getElementById('end-desc').innerText = desc;
+            
+            // 디버깅용: 실패 횟수 보여주기 (필요없으면 지워도 됨)
+            document.getElementById('fail-count-display').innerText = `DEATH COUNT: ${failCount}`;
 
+            // 5회 이상이면 스킵 버튼 표시
             if (failCount >= 5) {
                 document.getElementById('skip-btn').style.display = 'inline-block';
             } else {
@@ -449,11 +450,15 @@
         }
 
         function skipToEnding() {
+            // 스킵했으니 횟수 리셋
+            localStorage.removeItem('minority_fail_count');
+            
             showScreen('screen-end');
             setTheme('gray');
             
             document.getElementById('end-canvas').style.display = 'none'; 
             document.getElementById('skip-btn').style.display = 'none'; 
+            document.getElementById('fail-count-display').innerText = "";
             
             const titleEl = document.getElementById('end-title');
             titleEl.innerText = "SKIPPED";
@@ -466,11 +471,15 @@
         }
 
         function gameClear() {
+            // 클리어했으니 횟수 리셋
+            localStorage.removeItem('minority_fail_count');
+            
             showScreen('screen-end');
             setTheme('clear');
             document.getElementById('stage-display').innerText = "ALL CLEAR";
             document.getElementById('status-display').innerText = "LEGEND";
             document.getElementById('skip-btn').style.display = 'none';
+            document.getElementById('fail-count-display').innerText = "";
             
             document.getElementById('end-canvas').style.display = 'block';
             const titleEl = document.getElementById('end-title');
