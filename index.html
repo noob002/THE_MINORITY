@@ -3,182 +3,302 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>동의... 안 합니다</title>
+    <title>DISAGREE: The Minority Game</title>
     <style>
-        /* 1. 스타일 (CSS) */
+        /* 1. 레트로 CRT 감성 디자인 */
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
         body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: #1a1a1a; /* 어두운 배경 */
-            color: #ffffff;
+            background-color: #000;
+            color: #33ff33; /* 고전 터미널 그린 */
+            font-family: 'VT323', monospace;
+            margin: 0;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
+            overflow: hidden;
+            text-transform: uppercase;
         }
 
-        .container {
-            max-width: 500px;
+        /* 화면 전체에 스캔라인 효과 (옛날 TV 느낌) */
+        .scanline {
             width: 100%;
-            padding: 20px;
+            height: 100px;
+            z-index: 10;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(33, 255, 51, 0.04) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: absolute;
+            bottom: 100%;
+            animation: scanline 10s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -100%; }
+        }
+
+        .crt-frame {
+            border: 3px solid #33ff33;
+            padding: 40px;
+            width: 600px;
+            max-width: 90%;
+            box-shadow: 0 0 20px rgba(51, 255, 51, 0.4), inset 0 0 20px rgba(51, 255, 51, 0.2);
+            background-color: #0a0a0a;
+            position: relative;
+        }
+
+        /* 텍스트가 깜빡이는 커서 효과 */
+        .cursor::after {
+            content: '█';
+            animation: blink 1s step-end infinite;
+            margin-left: 5px;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
         }
 
         h1 {
-            font-size: 2rem;
-            margin-bottom: 40px;
-            color: #ff4757; /* 강렬한 포인트 컬러 */
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px #004400;
         }
 
-        .question-box {
-            background: #2f3542;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            font-size: 1.2rem;
-            line-height: 1.6;
-        }
-
-        .btn-group {
+        .status-bar {
             display: flex;
-            gap: 15px;
+            justify-content: space-between;
+            border-bottom: 1px solid #33ff33;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+        }
+
+        .question-area {
+            font-size: 1.8rem;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
             justify-content: center;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
         button {
-            flex: 1;
-            padding: 20px;
-            font-size: 1.1rem;
-            border: none;
-            border-radius: 10px;
+            background: transparent;
+            border: 1px solid #33ff33;
+            color: #33ff33;
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
+            padding: 15px;
             cursor: pointer;
-            transition: transform 0.1s;
-            font-weight: bold;
+            text-align: left;
+            padding-left: 20px;
+            transition: all 0.2s;
+            position: relative;
         }
 
-        button:active {
-            transform: scale(0.95);
+        button:hover {
+            background-color: #33ff33;
+            color: #000;
         }
 
-        .btn-agree { background-color: #747d8c; color: white; }
-        .btn-disagree { background-color: #ff4757; color: white; }
-
-        .result {
-            display: none; /* 처음엔 숨김 */
-            margin-top: 30px;
+        button:disabled {
+            border-color: #555;
+            color: #555;
+            cursor: not-allowed;
         }
 
-        .percentage {
-            font-size: 3rem;
-            font-weight: bold;
-            margin: 10px 0;
+        /* 결과 게이지 바 */
+        .result-overlay {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            display: none;
         }
         
-        .status-win { color: #2ed573; } /* 승리 색상 */
-        .status-lose { color: #ff6b81; } /* 패배 색상 */
+        .bar-container {
+            height: 20px;
+            background: #111;
+            border: 1px solid #33ff33;
+            margin-top: 5px;
+            position: relative;
+        }
+        
+        .bar-fill {
+            height: 100%;
+            background-color: #33ff33;
+            width: 0%;
+            transition: width 1s ease-out;
+        }
 
-        .next-btn {
-            background-color: white;
-            color: black;
-            margin-top: 20px;
-            width: 100%;
+        .danger-text { color: red; text-shadow: 0 0 5px red; }
+        .safe-text { color: #33ff33; }
+
+        /* 게임 오버 화면 */
+        #game-over-screen {
+            display: none;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>🙅 동의... 안 합니다</h1>
-        
-        <div class="question-box" id="question-text">
-            로딩 중...
+    <div class="scanline"></div>
+
+    <div class="crt-frame">
+        <div class="status-bar">
+            <span>STAGE: <span id="stage-count">1</span></span>
+            <span>STATUS: <span id="life-status">ALIVE</span></span>
         </div>
 
-        <div class="btn-group" id="choices">
-            <button class="btn-agree" onclick="selectOption(true)">⭕ 동의함</button>
-            <button class="btn-disagree" onclick="selectOption(false)">❌ 동의 안 함</button>
+        <div id="game-screen">
+            <div class="question-area">
+                <span id="question-text" class="cursor">SYSTEM BOOTING...</span>
+            </div>
+
+            <div class="choices" id="choice-container">
+                <button onclick="makeChoice('agree')">[Y] AGREE (동의)</button>
+                <button onclick="makeChoice('disagree')">[N] DISAGREE (거절)</button>
+            </div>
+
+            <div class="result-overlay" id="result-view">
+                <div style="display:flex; justify-content:space-between;">
+                    <span>동의율(AGREE): <span id="agree-pct">0%</span></span>
+                    <span id="result-message">ANALYZING...</span>
+                </div>
+                <div class="bar-container">
+                    <div class="bar-fill" id="agree-bar"></div>
+                </div>
+                <p style="text-align: center; margin-top: 20px; font-size: 1rem; color: #666;">
+                    *소수(50% 미만)여야 생존합니다.
+                </p>
+                <button style="margin-top: 20px; text-align: center;" onclick="nextStage()">>> NEXT SEQUENCE</button>
+            </div>
         </div>
 
-        <div class="result" id="result-view">
-            <p id="result-msg">결과는?</p>
-            <div class="percentage" id="score-text">0%</div>
-            <p id="sub-text">사람들이 이만큼 선택했습니다.</p>
-            <button class="next-btn" onclick="nextQuestion()">다음 질문으로 넘어가기</button>
+        <div id="game-over-screen">
+            <h1 class="danger-text">CONNECTION LOST</h1>
+            <p>당신은 다수(MAJORITY)에 속했습니다.</p>
+            <p>평범한 인간은 제거됩니다.</p>
+            <br>
+            <button onclick="location.reload()" style="text-align: center;">>> SYSTEM REBOOT (재시작)</button>
         </div>
     </div>
 
     <script>
-        /* 2. 로직 (JavaScript) */
-        
-        // 질문 리스트 데이터
-        const questions = [
-            { q: "민초는 치약 맛이 아니라, 치약이 민초 맛이다.", agreeRate: 40 }, // 예: 40%가 동의 -> 동의하면 승리(소수)
-            { q: "솔직히 탕수육은 부먹이다.", agreeRate: 30 },
-            { q: "겨울에 패딩 안 입고 코트 입는 게 멋이다.", agreeRate: 80 },
-            { q: "샤워할 때 노래 부르는 건 국룰이다.", agreeRate: 90 }
+        // 질문 데이터 (실제로는 서버에서 가져와야 함)
+        // agreeRate: '동의'를 선택한 사람들의 비율
+        const database = [
+            { q: "나는 샤워할 때 소변을 본 적이 있다.", agreeRate: 68 }, 
+            { q: "민트초코는 솔직히 맛있다.", agreeRate: 45 },
+            { q: "돈이 100억 생기면 군대 다시 간다.", agreeRate: 12 },
+            { q: "다시 태어나도 지금의 배우자(연인)와 결혼한다.", agreeRate: 38 },
+            { q: "나는 외계인의 존재를 믿는다.", agreeRate: 55 },
+            { q: "길에 떨어진 5만원, 아무도 못 봤으면 줍는다.", agreeRate: 88 }
         ];
 
-        let currentIdx = 0;
+        let currentStage = 0;
+        let isGameOver = false;
 
-        // 초기화
-        function init() {
-            showQuestion();
+        // 타이핑 효과 함수
+        function typeWriter(text, elementId, speed = 30) {
+            let i = 0;
+            const target = document.getElementById(elementId);
+            target.innerHTML = "";
+            target.classList.add('cursor');
+            
+            function type() {
+                if (i < text.length) {
+                    target.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                } else {
+                    target.classList.remove('cursor'); // 타이핑 끝나면 커서 제거 혹은 유지
+                }
+            }
+            type();
         }
 
-        function showQuestion() {
-            // UI 초기화
-            document.getElementById('choices').style.display = 'flex';
+        function initGame() {
+            updateStage();
+        }
+
+        function updateStage() {
+            if (currentStage >= database.length) {
+                alert("모든 테스트 통과! 당신은 진정한 아웃사이더입니다.");
+                location.reload();
+                return;
+            }
+
             document.getElementById('result-view').style.display = 'none';
+            document.getElementById('choice-container').style.display = 'flex';
+            document.getElementById('stage-count').innerText = currentStage + 1;
             
-            // 질문 표시
-            const qData = questions[currentIdx];
-            document.getElementById('question-text').innerText = qData.q;
+            // 질문 타이핑 효과로 보여주기
+            typeWriter(database[currentStage].q, "question-text");
         }
 
-        function selectOption(isAgree) {
-            const qData = questions[currentIdx];
-            const myChoiceRate = isAgree ? qData.agreeRate : (100 - qData.agreeRate);
+        function makeChoice(userChoice) {
+            const data = database[currentStage];
+            // 동의함(agree)을 눌렀다면 agreeRate가 내 비율, 거절(disagree)을 눌렀다면 (100-agreeRate)가 내 비율
+            const myPercentage = userChoice === 'agree' ? data.agreeRate : (100 - data.agreeRate);
             
-            // 결과 계산 (50% 미만이면 소수파 성공!)
-            const isMinority = myChoiceRate < 50;
+            // 승리 조건: 내 쪽 비율이 50% 미만이어야 함 (소수결)
+            const isSurvived = myPercentage < 50;
 
-            showResult(isMinority, myChoiceRate);
+            showResult(isSurvived, data.agreeRate, userChoice);
         }
 
-        function showResult(isWin, rate) {
-            document.getElementById('choices').style.display = 'none';
-            const resultView = document.getElementById('result-view');
-            resultView.style.display = 'block';
+        function showResult(isSurvived, agreeRate, userChoice) {
+            document.getElementById('choice-container').style.display = 'none';
+            document.getElementById('result-view').style.display = 'block';
 
-            const scoreText = document.getElementById('score-text');
-            const resultMsg = document.getElementById('result-msg');
-            const subText = document.getElementById('sub-text');
+            // 애니메이션 바
+            setTimeout(() => {
+                document.getElementById('agree-bar').style.width = agreeRate + "%";
+            }, 100);
 
-            scoreText.innerText = rate + "%";
+            document.getElementById('agree-pct').innerText = agreeRate + "%";
+
+            const msgElement = document.getElementById('result-message');
             
-            if (isWin) {
-                resultMsg.innerText = "🎉 성공! 당신은 소수입니다.";
-                resultMsg.className = "status-win";
-                subText.innerText = "남들이 가지 않는 길을 택하셨군요.";
+            if (isSurvived) {
+                msgElement.innerText = "SURVIVED (생존)";
+                msgElement.className = "safe-text";
+                msgElement.innerHTML += " [MINORITY]";
             } else {
-                resultMsg.innerText = "😱 실패! 당신은 다수입니다.";
-                resultMsg.className = "status-lose";
-                subText.innerText = "너무 평범한 선택을 하셨네요.";
+                msgElement.innerText = "DETECTED (발각)";
+                msgElement.className = "danger-text";
+                msgElement.innerHTML += " [MAJORITY]";
+                isGameOver = true;
             }
         }
 
-        function nextQuestion() {
-            currentIdx++;
-            if (currentIdx >= questions.length) {
-                alert("준비된 질문이 끝났습니다! 처음으로 돌아갑니다.");
-                currentIdx = 0;
+        function nextStage() {
+            if (isGameOver) {
+                document.getElementById('game-screen').style.display = 'none';
+                document.getElementById('game-over-screen').style.display = 'block';
+                document.getElementById('life-status').innerText = "DEAD";
+                document.getElementById('life-status').style.color = "red";
+            } else {
+                currentStage++;
+                // 바 초기화
+                document.getElementById('agree-bar').style.width = "0%";
+                updateStage();
             }
-            showQuestion();
         }
 
-        // 게임 시작
-        init();
+        // 시작
+        setTimeout(() => initGame(), 500); // 약간의 로딩 느낌
+
     </script>
 </body>
 </html>
