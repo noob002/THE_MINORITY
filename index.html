@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE MINORITY: NIGHTMARE (BALANCED)</title>
+    <title>THE MINORITY: GLOBAL RANKING</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
         :root {
             --main-color: #33ff33;
             --bg-color: #050505;
+            --rank-bg: rgba(0, 20, 0, 0.95);
         }
 
         body {
@@ -27,17 +28,17 @@
             transition: color 1s ease;
         }
 
-        body.mode-green { --main-color: #33ff33; }
+        body.mode-green { --main-color: #33ff33; --rank-bg: rgba(0, 20, 0, 0.95); }
         body.mode-yellow { --main-color: #ffcc00; }
         body.mode-red { --main-color: #ff3333; }
         body.mode-break { --main-color: #ffffff; }
         body.mode-clear { --main-color: #00ffff; }
         body.mode-gray { --main-color: #888888; }
         
-        /* 악몽 테마 */
-        body.mode-nightmare { --main-color: #b026ff; }
-        
-        /* 카오스 테마 */
+        body.mode-nightmare { 
+            --main-color: #b026ff; 
+            --rank-bg: rgba(20, 0, 20, 0.95);
+        }
         body.mode-chaos { --main-color: #00ffea; text-shadow: 2px 0 #ff00ff; }
 
         .crt-frame {
@@ -55,13 +56,8 @@
             z-index: 10;
         }
 
-        .crt-frame.chaos-shake {
-            animation: soft-drift 2s infinite alternate; 
-        }
-        @keyframes soft-drift {
-            from { transform: translate(0,0); }
-            to { transform: translate(1px, 1px); }
-        }
+        .crt-frame.chaos-shake { animation: soft-drift 2s infinite alternate; }
+        @keyframes soft-drift { from { transform: translate(0,0); } to { transform: translate(1px, 1px); } }
 
         .scanline {
             width: 100%; height: 100px;
@@ -71,7 +67,7 @@
         }
         @keyframes scanline { 0% { bottom: 100%; } 100% { bottom: -100%; } }
 
-        .header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--main-color); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.4rem; }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--main-color); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.4rem; position: relative; }
         .content-area { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; width: 100%; }
 
         button {
@@ -84,17 +80,48 @@
         #skip-btn { display: none; border-style: dashed; font-size: 1.2rem; margin-top: 10px; opacity: 0.7; }
         
         #nightmare-btn {
-            display: none; 
-            border: 2px solid #b026ff; 
-            color: #b026ff;
-            margin-top: 20px;
-            animation: pulse 1s infinite;
-            font-weight: bold;
+            display: none; border: 2px solid #b026ff; color: #b026ff; margin-top: 20px;
+            animation: pulse 1s infinite; font-weight: bold;
         }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        #screen-phase1, #screen-phase2, #screen-phase3, #screen-end { display: none; width: 100%; text-align: center; }
+        /* ================= RANKING UI ================= */
+        #rank-open-btn {
+            position: absolute;
+            top: 0; left: 0; /* 헤더 왼쪽 상단 */
+            font-size: 1.2rem;
+            padding: 5px 10px;
+            border: 1px solid var(--main-color);
+            display: block; /* 기본 표시 */
+        }
 
+        #rank-modal {
+            display: none;
+            position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80%; height: 80%;
+            background: var(--rank-bg);
+            border: 2px solid var(--main-color);
+            z-index: 2000;
+            padding: 20px;
+            flex-direction: column;
+        }
+
+        .rank-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
+        .rank-tab { font-size: 1.2rem; border-bottom: 1px solid transparent; opacity: 0.5; }
+        .rank-tab.active { opacity: 1; border-bottom: 1px solid var(--main-color); font-weight: bold; }
+
+        .rank-table { width: 100%; border-collapse: collapse; font-size: 1.2rem; margin-top: 10px; }
+        .rank-table th { border-bottom: 1px solid var(--main-color); padding: 5px; text-align: center; }
+        .rank-table td { padding: 5px; text-align: center; }
+        .rank-user { color: #fff; text-shadow: 0 0 5px #fff; } /* 유저 강조 */
+
+        #close-rank-btn { margin-top: auto; font-size: 1rem; align-self: center; }
+
+        /* Phases */
+        #screen-phase1, #screen-phase2, #screen-phase3, #screen-end { display: none; width: 100%; text-align: center; }
+        
+        /* Game Elements (Same as before) */
         .question-text { font-size: 2rem; min-height: 80px; margin-bottom: 30px; }
         .result-bar-bg { width: 100%; height: 20px; background: #111; border: 1px solid var(--main-color); margin-top: 20px; display: none; }
         .result-bar-fill { height: 100%; background: var(--main-color); width: 0%; transition: width 0.5s; }
@@ -102,24 +129,16 @@
         .hack-input { background: transparent; border: none; border-bottom: 3px solid var(--main-color); color: var(--main-color); font-size: 2.5rem; text-align: center; width: 80%; outline: none; text-transform: uppercase; }
         .timer-bg { width: 100%; height: 10px; background: #330000; margin-top: 30px; }
         .timer-fill { width: 100%; height: 100%; background: #ff3333; }
-
         #screen-phase3 { height: 100%; position: relative; }
         canvas { border: 2px solid var(--main-color); background: #000; cursor: none; display: block; margin: 0 auto; transition: border-color 0.2s; }
         .survival-timer { font-size: 2rem; margin-bottom: 10px; color: var(--main-color); transition: color 0.2s; }
-        #break-overlay {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 100%; text-align: center; font-size: 2rem; color: #fff;
-            text-shadow: 0 0 10px #fff; display: none; pointer-events: none;
-        }
-
+        #break-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; font-size: 2rem; color: #fff; text-shadow: 0 0 10px #fff; display: none; pointer-events: none; }
+        
         #screen-end { position: relative; height: 100%; }
         #end-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
         .end-content { position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; height: 100%; }
         .shine-text { font-size: 5rem; margin: 0; animation: shine 2s infinite alternate; }
-        @keyframes shine {
-            from { text-shadow: 0 0 10px var(--main-color); }
-            to { text-shadow: 0 0 30px var(--main-color), 0 0 10px #fff; transform: scale(1.05); }
-        }
+        @keyframes shine { from { text-shadow: 0 0 10px var(--main-color); } to { text-shadow: 0 0 30px var(--main-color), 0 0 10px #fff; transform: scale(1.05); } }
         .blink { animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
     </style>
@@ -129,8 +148,12 @@
 
     <div class="crt-frame" id="game-frame">
         <div class="header">
-            <span>LEVEL: <span id="stage-display">WAITING</span></span>
-            <span>STATUS: <span id="status-display">OK</span></span>
+            <button id="rank-open-btn" onclick="openRanking()">🏆 RANK</button>
+            
+            <div style="flex:1;"></div> <div style="text-align: right;">
+                <span>LEVEL: <span id="stage-display">WAITING</span></span><br>
+                <span>STATUS: <span id="status-display">OK</span></span>
+            </div>
         </div>
 
         <div class="content-area">
@@ -179,25 +202,57 @@
                 <div class="end-content">
                     <h1 class="shine-text" id="end-title">ALL CLEAR</h1>
                     <p id="end-desc" style="font-size: 1.5rem; margin-top: 20px;">...</p>
-                    
                     <button id="reboot-btn" onclick="location.reload()" style="margin-top: 40px;">SYSTEM REBOOT</button>
                     <button id="skip-btn" onclick="skipToEnding()">>> SKIP TO ENDING >></button>
                 </div>
             </div>
         </div>
+
+        <div id="rank-modal">
+            <h2 style="text-align: center; margin: 0 0 20px 0;">GLOBAL LEADERBOARD</h2>
+            <div class="rank-tabs">
+                <button class="rank-tab active" id="tab-legend" onclick="showRank('legend')">LEGEND (NORMAL)</button>
+                <button class="rank-tab" id="tab-god" onclick="showRank('god')">GOD (NIGHTMARE)</button>
+            </div>
+            <div style="flex:1; overflow-y: auto;">
+                <table class="rank-table">
+                    <thead>
+                        <tr>
+                            <th width="15%">RANK</th>
+                            <th width="40%">NAME</th>
+                            <th width="25%">ATTEMPTS</th> <th width="20%">DATE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rank-tbody">
+                        </tbody>
+                </table>
+            </div>
+            <button id="close-rank-btn" onclick="closeRanking()">CLOSE</button>
+        </div>
     </div>
 
     <script>
-        /* ================= UTILS ================= */
+        /* ================= UTILS & LOCAL STORAGE ================= */
         function showScreen(id) {
             ['screen-start','screen-phase1','screen-phase2','screen-phase3','screen-end']
                 .forEach(s => document.getElementById(s).style.display = 'none');
             document.getElementById(id).style.display = 'block';
+            
+            // 게임 화면에 들어가면 랭킹 버튼 숨기기
+            if (id === 'screen-start') {
+                document.getElementById('rank-open-btn').style.display = 'block';
+            } else {
+                document.getElementById('rank-open-btn').style.display = 'none';
+            }
         }
         function setTheme(mode) { document.body.className = `mode-${mode}`; }
 
         let failCount = parseInt(localStorage.getItem('minority_fail_count')) || 0;
         let isGameCleared = localStorage.getItem('minority_game_cleared') === 'true';
+
+        // 최고 기록 (최소 시도 횟수)
+        let bestRecordNormal = parseInt(localStorage.getItem('minority_best_normal')) || 999;
+        let bestRecordNightmare = parseInt(localStorage.getItem('minority_best_nightmare')) || 999;
 
         window.onload = function() {
             if (isGameCleared) {
@@ -205,13 +260,99 @@
             }
         };
 
+        /* ================= RANKING SYSTEM (SIMULATED) ================= */
+        // 가상의 글로벌 데이터 생성
+        const fakeDataNormal = [
+            { name: "DEV_KIM", attempts: 0, date: "2024.10" },
+            { name: "UNKNOWN_01", attempts: 2, date: "2024.11" },
+            { name: "TEST_SUB", attempts: 5, date: "2024.11" },
+            { name: "GUEST_99", attempts: 12, date: "2024.12" },
+            { name: "PLAYER_X", attempts: 24, date: "2024.12" },
+        ];
+        const fakeDataNightmare = [
+            { name: "DEV_KIM", attempts: 3, date: "2024.10" },
+            { name: "GOD_GAMER", attempts: 7, date: "2024.11" },
+            { name: "CHAOS_LOVER", attempts: 15, date: "2024.12" },
+        ];
+
+        let currentRankTab = 'legend'; // 'legend' or 'god'
+
+        function openRanking() {
+            document.getElementById('rank-modal').style.display = 'flex';
+            showRank('legend'); // 기본 탭
+        }
+        function closeRanking() {
+            document.getElementById('rank-modal').style.display = 'none';
+        }
+
+        function showRank(type) {
+            currentRankTab = type;
+            
+            // 탭 스타일
+            document.getElementById('tab-legend').className = (type === 'legend' ? 'rank-tab active' : 'rank-tab');
+            document.getElementById('tab-god').className = (type === 'god' ? 'rank-tab active' : 'rank-tab');
+
+            // 데이터 준비
+            let list = (type === 'legend') ? [...fakeDataNormal] : [...fakeDataNightmare];
+            
+            // 유저 기록 합치기
+            let userBest = (type === 'legend') ? bestRecordNormal : bestRecordNightmare;
+            let userIncluded = false;
+
+            if (userBest < 999) { // 기록이 있을 때만
+                list.push({ name: "YOU", attempts: userBest, date: "TODAY", isUser: true });
+                userIncluded = true;
+            }
+
+            // 정렬 (시도 횟수 적은 순)
+            list.sort((a, b) => a.attempts - b.attempts);
+
+            // 테이블 렌더링
+            const tbody = document.getElementById('rank-tbody');
+            tbody.innerHTML = "";
+            
+            if (list.length === 0 && !userIncluded) {
+                tbody.innerHTML = "<tr><td colspan='4'>NO DATA</td></tr>";
+                return;
+            }
+
+            list.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                if (item.isUser) tr.className = "rank-user";
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.name}</td>
+                    <td>${item.attempts} FAILS</td>
+                    <td>${item.date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 기록 저장 함수 (클리어 시 호출)
+        function saveRecord(isNightmare) {
+            // 이번 판의 실패 횟수 (failCount)
+            if (!isNightmare) {
+                // 노말 모드 기록 갱신 (더 적은 횟수일 때만)
+                if (failCount < bestRecordNormal) {
+                    bestRecordNormal = failCount;
+                    localStorage.setItem('minority_best_normal', bestRecordNormal);
+                }
+            } else {
+                // 악몽 모드 기록 갱신
+                if (failCount < bestRecordNightmare) {
+                    bestRecordNightmare = failCount;
+                    localStorage.setItem('minority_best_nightmare', bestRecordNightmare);
+                }
+            }
+        }
+
+        /* ================= GAME LOGIC ================= */
         let gameMode = 'normal'; 
-        
         let chaosModeActive = false;
         let frameVelocity = { x: 1.2, y: 1.2 }; 
         let framePos = { x: 0, y: 0 }; 
 
-        /* ================= PHASE 1 & 2 ================= */
         function startNightmare() {
             gameMode = 'nightmare';
             startPhase3();
@@ -437,7 +578,7 @@
 
             // 악몽 모드 로직
             if (gameMode === 'nightmare') {
-                if (p3TotalTime <= 30) { updateChaosFrame(); } // 30초부터 움직임
+                if (p3TotalTime <= 30) { updateChaosFrame(); } 
                 if (p3TotalTime <= 0) { cancelAnimationFrame(gameLoopId); gameClear(); return; }
             } else {
                 let newPhase = currentPhase;
@@ -474,7 +615,6 @@
                     ctx.lineWidth = 2; ctx.moveTo(w.x, 0); ctx.lineTo(w.x, canvas.height); ctx.stroke(); ctx.restore();
                 } else {
                     let speed = (currentPhase === 'red') ? 6 : 5;
-                    // [슈퍼 너프] 악몽 속도: 7.5 -> 5.5 (일반과 비슷)
                     if (gameMode === 'nightmare') speed = 5.5; 
 
                     let color = '#ff0000';
@@ -506,19 +646,14 @@
 
         function spawnPattern(phase) {
             if (gameMode === 'nightmare') {
-                // [슈퍼 너프] 악몽 모드 점선 빈도: 0.05 -> 0.025 (반으로 감소)
                 let spawnRateWarn = 0.025; 
                 let spawnRateEnemy = 0.04; 
 
-                // [슈퍼 너프] 경고 시간: 90 프레임 (1.5초)
                 if (Math.random() < spawnRateWarn) warnings.push({ x: Math.random() * canvas.width, width: 30, timer: 90, active: true }); 
-                
-                // [슈퍼 너프] 일반 적 속도: 4 (아주 느림)
                 if (Math.random() < spawnRateEnemy) enemies.push({ x: Math.random() * canvas.width, y: -20, size: Math.random() * 15 + 10, speed: 4, type: 'normal', color: chaosModeActive ? '#00ffea' : '#b026ff' });
                 return;
             }
 
-            // 노말 모드
             if (phase === 'green') {
                 if (Math.random() < 0.05) enemies.push({ x: Math.random() * canvas.width, y: -20, size: Math.random() * 15 + 10, speed: (Math.random() * 2 + 1), type: 'normal', color: '#33ff33' });
             } else if (phase === 'yellow') {
@@ -569,7 +704,12 @@
         }
 
         function gameClear() {
+            // [기록 저장]
+            saveRecord(gameMode === 'nightmare');
+            
+            // 실패 횟수 리셋
             localStorage.removeItem('minority_fail_count');
+            failCount = 0;
             
             if (gameMode === 'normal') {
                 localStorage.setItem('minority_game_cleared', 'true');
