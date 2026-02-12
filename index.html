@@ -8,7 +8,7 @@
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
         :root {
-            --main-color: #33ff33; /* 기본 초록 */
+            --main-color: #33ff33;
             --bg-color: #050505;
         }
 
@@ -24,13 +24,14 @@
             overflow: hidden;
             text-transform: uppercase;
             user-select: none;
-            transition: color 0.5s ease; /* 색상 변경 부드럽게 */
+            transition: color 1s ease;
         }
 
-        /* 상태별 색상 테마 */
+        /* 색상 테마 클래스 */
         body.mode-green { --main-color: #33ff33; }
         body.mode-yellow { --main-color: #ffcc00; }
         body.mode-red { --main-color: #ff3333; }
+        body.mode-break { --main-color: #ffffff; } /* 휴식 땐 흰색 */
 
         .crt-frame {
             border: 4px solid var(--main-color);
@@ -43,10 +44,9 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            transition: border-color 0.5s, box-shadow 0.5s;
+            transition: border-color 1s, box-shadow 1s;
         }
 
-        /* 스캔라인 */
         .scanline {
             width: 100%; height: 100px;
             background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(0,0,0,0) 100%);
@@ -55,7 +55,7 @@
         }
         @keyframes scanline { 0% { bottom: 100%; } 100% { bottom: -100%; } }
 
-        /* 공통 UI */
+        /* UI */
         .header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--main-color); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.4rem; }
         .content-area { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; width: 100%; }
 
@@ -66,30 +66,43 @@
         }
         button:hover { background-color: var(--main-color); color: #000; }
 
-        /* 화면들 */
+        /* Phases */
         #screen-phase1, #screen-phase2, #screen-phase3, #screen-end { display: none; width: 100%; text-align: center; }
 
-        /* Phase 1 */
+        /* Phase 1 & 2 Styles (생략 - 이전과 동일) */
         .question-text { font-size: 2rem; min-height: 80px; margin-bottom: 30px; }
         .result-bar-bg { width: 100%; height: 20px; background: #111; border: 1px solid var(--main-color); margin-top: 20px; display: none; }
         .result-bar-fill { height: 100%; background: var(--main-color); width: 0%; transition: width 0.5s; }
-
-        /* Phase 2 */
         .code-box { font-size: 4rem; letter-spacing: 15px; margin: 20px 0; border: 2px dashed var(--main-color); padding: 20px; }
         .hack-input { background: transparent; border: none; border-bottom: 3px solid var(--main-color); color: var(--main-color); font-size: 2.5rem; text-align: center; width: 80%; outline: none; text-transform: uppercase; }
         .timer-bg { width: 100%; height: 10px; background: #330000; margin-top: 30px; }
         .timer-fill { width: 100%; height: 100%; background: #ff3333; }
 
-        /* Phase 3 */
-        #screen-phase3 { height: 100%; }
-        canvas { border: 2px solid var(--main-color); background: #000; cursor: none; display: block; margin: 0 auto; transition: border-color 0.5s; }
-        .survival-timer { font-size: 2rem; margin-bottom: 10px; color: var(--main-color); transition: color 0.5s; }
+        /* Phase 3 Specific */
+        #screen-phase3 { height: 100%; position: relative; }
+        canvas { border: 2px solid var(--main-color); background: #000; cursor: none; display: block; margin: 0 auto; transition: border-color 1s; }
+        .survival-timer { font-size: 2rem; margin-bottom: 10px; color: var(--main-color); transition: color 1s; }
+        
+        /* 휴식 시간 텍스트 오버레이 */
+        #break-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            text-align: center;
+            font-size: 2rem;
+            color: #fff;
+            text-shadow: 0 0 10px #fff;
+            display: none;
+            pointer-events: none; /* 마우스 통과 */
+        }
         
         .blink { animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
-<body class="mode-green"> <div class="scanline"></div>
+<body class="mode-green">
+    <div class="scanline"></div>
 
     <div class="crt-frame">
         <div class="header">
@@ -100,7 +113,7 @@
         <div class="content-area">
             <div id="screen-start" style="text-align: center;">
                 <h1 style="font-size: 3rem;">THE MINORITY</h1>
-                <p>시스템에 접속하시겠습니까?</p>
+                <p>최종 테스트를 시작합니다.</p>
                 <button onclick="startPhase1()" class="blink">SYSTEM START</button>
             </div>
 
@@ -127,11 +140,12 @@
 
             <div id="screen-phase3">
                 <div class="survival-timer">TIME: <span id="dodge-timer">READY</span></div>
-                <canvas id="gameCanvas" width="600" height="350"></canvas>
+                <div style="position: relative;">
+                    <canvas id="gameCanvas" width="600" height="350"></canvas>
+                    <div id="break-overlay"></div>
+                </div>
                 <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">
-                    <span style="color:#33ff33">초록: 쉬움</span> → 
-                    <span style="color:#ffcc00">노랑: 점선 주의</span> → 
-                    <span style="color:#ff3333">빨강: 전력 생존</span>
+                    MOUSE MOVE / AVOID OBJECTS
                 </p>
             </div>
 
@@ -144,14 +158,15 @@
     </div>
 
     <script>
-        /* ================= GAME LOGIC ================= */
+        /* ================= UTILS & CONFIG ================= */
         function showScreen(id) {
             ['screen-start','screen-phase1','screen-phase2','screen-phase3','screen-end']
                 .forEach(s => document.getElementById(s).style.display = 'none');
             document.getElementById(id).style.display = 'block';
         }
+        function setTheme(mode) { document.body.className = `mode-${mode}`; }
 
-        // --- Phase 1: Minority ---
+        /* ================= PHASE 1: MINORITY ================= */
         const questions = [
             { q: "비 오는 날이 맑은 날보다 좋다.", rate: 80 }, 
             { q: "10억 받기 vs 말하는 고양이 키우기", rate: 20 },
@@ -191,13 +206,13 @@
             if (p1Idx >= questions.length) startPhase2(); else renderP1();
         }
 
-        // --- Phase 2: Hacking ---
+        /* ================= PHASE 2: HACKING ================= */
         let p2Score = 0;
         let p2TimerInterval;
         let p2Time = 100;
 
         function startPhase2() {
-            setTheme('red'); // 해킹은 위험하니까 빨간색
+            setTheme('red');
             document.getElementById('stage-display').innerText = "2 - HACKING";
             document.getElementById('status-display').innerText = "WARNING";
             showScreen('screen-phase2');
@@ -233,36 +248,41 @@
             }
         }
 
-        // --- Phase 3: Dodge (Difficulty Progression) ---
+        /* ================= PHASE 3: SURVIVAL (UPDATED) ================= */
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let gameLoopId;
-        let p3TimeLeft = 15.00;
-        let player = { x: 300, y: 175, size: 10, color: '#fff' };
         
+        // 시간 설정 (총 45초)
+        // 45~30(초록) -> 30~25(휴식) -> 25~10(노랑) -> 10~5(휴식) -> 5~0(빨강)
+        let p3TotalTime = 45.00;
+        
+        let player = { x: 300, y: 175, size: 10, color: '#fff' };
         let enemies = [];
         let warnings = [];
-        
-        let gameState = 'ready';
-        let countdownNum = 3; 
+        let gameState = 'ready'; // ready, playing
+        let currentPhase = 'green'; // green, break1, yellow, break2, red
+        let countdownNum = 3;
 
-        // 테마 변경 함수
-        function setTheme(color) {
-            document.body.className = `mode-${color}`;
-        }
+        // 타이핑 효과 변수
+        let typeWriterIdx = 0;
+        let typeWriterText = "";
+        let typeWriterInterval;
 
         function startPhase3() {
             showScreen('screen-phase3');
             document.getElementById('stage-display').innerText = "3 - SURVIVAL";
             
             // 초기화
-            setTheme('green'); // 시작은 초록색
+            setTheme('green');
             enemies = [];
             warnings = [];
-            p3TimeLeft = 15.00;
+            p3TotalTime = 45.00;
             gameState = 'ready';
+            currentPhase = 'green';
             countdownNum = 3;
             document.getElementById('dodge-timer').innerText = "READY...";
+            document.getElementById('break-overlay').style.display = 'none';
 
             canvas.addEventListener('mousemove', (e) => {
                 const rect = canvas.getBoundingClientRect();
@@ -270,6 +290,7 @@
                 player.y = e.clientY - rect.top;
             });
 
+            // 3, 2, 1 카운트다운
             const countInterval = setInterval(() => {
                 if (countdownNum > 0) {
                     document.getElementById('dodge-timer').innerText = `START IN ${countdownNum}...`;
@@ -284,56 +305,31 @@
             gameLoopId = requestAnimationFrame(gameLoop);
         }
 
-        function spawnPattern(phase) {
-            // 속도 계수 (빨간 구간이면 빨라짐)
-            const speedMult = (phase === 'red') ? 1.5 : 1.0;
-
-            // 1. 노란색 구간: 점선 패턴만 나옴 (100%)
-            if (phase === 'yellow') {
-                if (Math.random() < 0.05) { // 빈도
-                    warnings.push({ x: Math.random() * canvas.width, width: 25, timer: 90, active: true });
+        // 텍스트 타이핑 효과 함수
+        function startTyping(text) {
+            const overlay = document.getElementById('break-overlay');
+            overlay.style.display = 'block';
+            overlay.innerText = "";
+            typeWriterText = text;
+            typeWriterIdx = 0;
+            
+            clearInterval(typeWriterInterval);
+            typeWriterInterval = setInterval(() => {
+                if (typeWriterIdx < typeWriterText.length) {
+                    overlay.innerText += typeWriterText.charAt(typeWriterIdx);
+                    typeWriterIdx++;
+                } else {
+                    clearInterval(typeWriterInterval);
                 }
-                return;
-            }
-
-            // 2. 초록색 구간: 느린 기습 공격만 나옴 (점선 X)
-            if (phase === 'green') {
-                if (Math.random() < 0.05) { // 아주 가끔
-                    enemies.push({
-                        x: Math.random() * canvas.width, y: -20,
-                        size: Math.random() * 15 + 10,
-                        speed: (Math.random() * 2 + 1), // 아주 느림
-                        type: 'normal', color: '#33ff33' // 초록색 적
-                    });
-                }
-                return;
-            }
-
-            // 3. 빨간색 구간: 모든 패턴 등장 + 빠름
-            if (phase === 'red') {
-                const rand = Math.random();
-                // 30% 확률로 점선 공격
-                if (rand < 0.3) {
-                    warnings.push({ x: Math.random() * canvas.width, width: 30, timer: 60, active: true }); // 경고 시간 짧음
-                } 
-                // 10% 확률로 기습 공격
-                else if (rand < 0.4) {
-                    enemies.push({
-                        x: Math.random() * canvas.width, y: -20,
-                        size: Math.random() * 15 + 10,
-                        speed: (Math.random() * 3 + 2) * speedMult, // 빠름
-                        type: 'normal', color: '#ff3333'
-                    });
-                }
-            }
+            }, 100); // 글자 나오는 속도
         }
 
         function gameLoop() {
-            // 배경 (잔상)
+            // 캔버스 클리어 (잔상 효과)
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 플레이어
+            // 플레이어 그리기
             ctx.fillStyle = "#ffffff";
             ctx.shadowBlur = 10; ctx.shadowColor = "#fff";
             ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
@@ -346,51 +342,88 @@
                 return;
             }
 
-            // --- 시간 및 단계 체크 ---
-            p3TimeLeft -= 0.016;
-            document.getElementById('dodge-timer').innerText = p3TimeLeft.toFixed(2);
+            // --- 시간 관리 및 페이즈 전환 로직 ---
+            p3TotalTime -= 0.016;
+            document.getElementById('dodge-timer').innerText = p3TotalTime.toFixed(2);
 
-            let currentPhase = 'green';
-            if (p3TimeLeft > 10) {
-                currentPhase = 'green';
-                setTheme('green');
-                document.getElementById('status-display').innerText = "SAFE ZONE";
-            } else if (p3TimeLeft > 5) {
-                currentPhase = 'yellow';
-                setTheme('yellow');
-                document.getElementById('status-display').innerText = "CAUTION";
+            let newPhase = currentPhase;
+
+            // 시간대별 페이즈 정의 (총 45초)
+            if (p3TotalTime > 30) {
+                // 45~30초 (15초간): GREEN
+                newPhase = 'green';
+            } else if (p3TotalTime > 25) {
+                // 30~25초 (5초간): BREAK 1
+                newPhase = 'break1';
+            } else if (p3TotalTime > 10) {
+                // 25~10초 (15초간): YELLOW
+                newPhase = 'yellow';
+            } else if (p3TotalTime > 5) {
+                // 10~5초 (5초간): BREAK 2 (중요 문구)
+                newPhase = 'break2';
+            } else if (p3TotalTime > 0) {
+                // 5~0초 (5초간): RED (짧고 굵게)
+                newPhase = 'red';
             } else {
-                currentPhase = 'red';
-                setTheme('red');
-                document.getElementById('status-display').innerText = "CRITICAL";
+                cancelAnimationFrame(gameLoopId);
+                gameClear();
+                return;
             }
 
-            if (p3TimeLeft <= 0) { cancelAnimationFrame(gameLoopId); gameClear(); return; }
+            // 페이즈가 바뀔 때 1번만 실행되는 로직
+            if (newPhase !== currentPhase) {
+                currentPhase = newPhase;
+                
+                if (currentPhase === 'break1') {
+                    setTheme('break');
+                    enemies = []; warnings = []; // 적 제거 (휴식)
+                    startTyping("SYSTEM UPGRADE...");
+                } 
+                else if (currentPhase === 'break2') {
+                    setTheme('break');
+                    enemies = []; warnings = [];
+                    startTyping("당신은 과연 이 이상을 깰 수 있을까?"); // 요청하신 문구
+                }
+                else if (currentPhase === 'green') {
+                    setTheme('green');
+                    document.getElementById('break-overlay').style.display = 'none';
+                    document.getElementById('status-display').innerText = "SAFE";
+                }
+                else if (currentPhase === 'yellow') {
+                    setTheme('yellow');
+                    document.getElementById('break-overlay').style.display = 'none';
+                    document.getElementById('status-display').innerText = "CAUTION";
+                }
+                else if (currentPhase === 'red') {
+                    setTheme('red');
+                    document.getElementById('break-overlay').style.display = 'none';
+                    document.getElementById('status-display').innerText = "CRITICAL";
+                }
+            }
 
-            // 적 생성
-            spawnPattern(currentPhase);
+            // --- 적 생성 로직 (휴식시간엔 생성 안 함) ---
+            if (!currentPhase.includes('break')) {
+                spawnPattern(currentPhase);
+            }
 
-            // 1. 경고(점선) 처리
+            // 1. 경고선 업데이트
             for (let i = warnings.length - 1; i >= 0; i--) {
                 let w = warnings[i];
                 w.timer--;
-
                 if (w.timer > 0) {
-                    // 점선 그리기
                     ctx.save();
                     ctx.beginPath();
                     ctx.setLineDash([10, 10]);
-                    ctx.strokeStyle = (Math.floor(Date.now() / 50) % 2 === 0) ? "#ffcc00" : "#554400"; // 노란색 깜빡임
+                    ctx.strokeStyle = (Math.floor(Date.now() / 50) % 2 === 0) ? "#ffcc00" : "#554400";
                     ctx.lineWidth = 2;
                     ctx.moveTo(w.x, 0); ctx.lineTo(w.x, canvas.height);
                     ctx.stroke();
                     ctx.restore();
                 } else {
-                    // 미사일 발사
                     enemies.push({
                         x: w.x - (w.width/2), y: -50,
                         size: w.width,
-                        speed: (currentPhase === 'red' ? 15 : 10), // 빨강일 때 더 빠름
+                        speed: (currentPhase === 'red' ? 18 : 12),
                         type: 'blitz', color: '#ff0000'
                     });
                     warnings.splice(i, 1);
@@ -401,13 +434,11 @@
             for (let i = 0; i < enemies.length; i++) {
                 let e = enemies[i];
                 e.y += e.speed;
-
                 ctx.fillStyle = e.color;
-                // 레이저형은 길게, 일반형은 네모
                 let height = (e.type === 'blitz') ? canvas.height : e.size; 
                 ctx.fillRect(e.x, e.y, e.size, height);
 
-                // 충돌 감지
+                // 충돌
                 if (
                     player.x < e.x + e.size &&
                     player.x + player.size > e.x &&
@@ -415,18 +446,47 @@
                     player.y + player.size > e.y
                 ) {
                     cancelAnimationFrame(gameLoopId);
-                    failGame("KILLED", "공격에 당했습니다.");
+                    failGame("KILLED", "생존에 실패했습니다.");
                     return;
                 }
             }
-            
-            // 메모리 정리
             if (enemies.length > 50) enemies.shift();
-
+            
             gameLoopId = requestAnimationFrame(gameLoop);
         }
 
-        // --- Endings ---
+        // 패턴 생성기
+        function spawnPattern(phase) {
+            if (phase === 'green') {
+                if (Math.random() < 0.05) { // 천천히 떨어지는 초록 박스
+                    enemies.push({
+                        x: Math.random() * canvas.width, y: -20,
+                        size: Math.random() * 15 + 10,
+                        speed: (Math.random() * 2 + 1),
+                        type: 'normal', color: '#33ff33'
+                    });
+                }
+            } else if (phase === 'yellow') {
+                if (Math.random() < 0.04) { // 점선 경고만
+                    warnings.push({ x: Math.random() * canvas.width, width: 25, timer: 90, active: true });
+                }
+            } else if (phase === 'red') {
+                // 빨간맛: 둘 다 나옴 + 빠름
+                if (Math.random() < 0.2) {
+                    warnings.push({ x: Math.random() * canvas.width, width: 30, timer: 40, active: true }); // 경고 시간 짧음
+                }
+                if (Math.random() < 0.3) {
+                    enemies.push({
+                        x: Math.random() * canvas.width, y: -20,
+                        size: Math.random() * 15 + 10,
+                        speed: (Math.random() * 5 + 5), // 매우 빠름
+                        type: 'normal', color: '#ff3333'
+                    });
+                }
+            }
+        }
+
+        /* ================= ENDINGS ================= */
         function failGame(title, desc) {
             showScreen('screen-end');
             setTheme('red');
