@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>동의... 안 합니다</title>
+    <style>
+        /* 1. 스타일 (CSS) */
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #1a1a1a; /* 어두운 배경 */
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 40px;
+            color: #ff4757; /* 강렬한 포인트 컬러 */
+        }
+
+        .question-box {
+            background: #2f3542;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            flex: 1;
+            padding: 20px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            font-weight: bold;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-agree { background-color: #747d8c; color: white; }
+        .btn-disagree { background-color: #ff4757; color: white; }
+
+        .result {
+            display: none; /* 처음엔 숨김 */
+            margin-top: 30px;
+        }
+
+        .percentage {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .status-win { color: #2ed573; } /* 승리 색상 */
+        .status-lose { color: #ff6b81; } /* 패배 색상 */
+
+        .next-btn {
+            background-color: white;
+            color: black;
+            margin-top: 20px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🙅 동의... 안 합니다</h1>
+        
+        <div class="question-box" id="question-text">
+            로딩 중...
+        </div>
+
+        <div class="btn-group" id="choices">
+            <button class="btn-agree" onclick="selectOption(true)">⭕ 동의함</button>
+            <button class="btn-disagree" onclick="selectOption(false)">❌ 동의 안 함</button>
+        </div>
+
+        <div class="result" id="result-view">
+            <p id="result-msg">결과는?</p>
+            <div class="percentage" id="score-text">0%</div>
+            <p id="sub-text">사람들이 이만큼 선택했습니다.</p>
+            <button class="next-btn" onclick="nextQuestion()">다음 질문으로 넘어가기</button>
+        </div>
+    </div>
+
+    <script>
+        /* 2. 로직 (JavaScript) */
+        
+        // 질문 리스트 데이터
+        const questions = [
+            { q: "민초는 치약 맛이 아니라, 치약이 민초 맛이다.", agreeRate: 40 }, // 예: 40%가 동의 -> 동의하면 승리(소수)
+            { q: "솔직히 탕수육은 부먹이다.", agreeRate: 30 },
+            { q: "겨울에 패딩 안 입고 코트 입는 게 멋이다.", agreeRate: 80 },
+            { q: "샤워할 때 노래 부르는 건 국룰이다.", agreeRate: 90 }
+        ];
+
+        let currentIdx = 0;
+
+        // 초기화
+        function init() {
+            showQuestion();
+        }
+
+        function showQuestion() {
+            // UI 초기화
+            document.getElementById('choices').style.display = 'flex';
+            document.getElementById('result-view').style.display = 'none';
+            
+            // 질문 표시
+            const qData = questions[currentIdx];
+            document.getElementById('question-text').innerText = qData.q;
+        }
+
+        function selectOption(isAgree) {
+            const qData = questions[currentIdx];
+            const myChoiceRate = isAgree ? qData.agreeRate : (100 - qData.agreeRate);
+            
+            // 결과 계산 (50% 미만이면 소수파 성공!)
+            const isMinority = myChoiceRate < 50;
+
+            showResult(isMinority, myChoiceRate);
+        }
+
+        function showResult(isWin, rate) {
+            document.getElementById('choices').style.display = 'none';
+            const resultView = document.getElementById('result-view');
+            resultView.style.display = 'block';
+
+            const scoreText = document.getElementById('score-text');
+            const resultMsg = document.getElementById('result-msg');
+            const subText = document.getElementById('sub-text');
+
+            scoreText.innerText = rate + "%";
+            
+            if (isWin) {
+                resultMsg.innerText = "🎉 성공! 당신은 소수입니다.";
+                resultMsg.className = "status-win";
+                subText.innerText = "남들이 가지 않는 길을 택하셨군요.";
+            } else {
+                resultMsg.innerText = "😱 실패! 당신은 다수입니다.";
+                resultMsg.className = "status-lose";
+                subText.innerText = "너무 평범한 선택을 하셨네요.";
+            }
+        }
+
+        function nextQuestion() {
+            currentIdx++;
+            if (currentIdx >= questions.length) {
+                alert("준비된 질문이 끝났습니다! 처음으로 돌아갑니다.");
+                currentIdx = 0;
+            }
+            showQuestion();
+        }
+
+        // 게임 시작
+        init();
+    </script>
+</body>
+</html>
