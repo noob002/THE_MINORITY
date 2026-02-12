@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE MINORITY: NIGHTMARE (EASY VER)</title>
+    <title>THE MINORITY: NIGHTMARE (BALANCED)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -56,7 +56,7 @@
         }
 
         .crt-frame.chaos-shake {
-            animation: soft-drift 2s infinite alternate; /* 격렬한 흔들림 제거, 부드럽게 */
+            animation: soft-drift 2s infinite alternate; 
         }
         @keyframes soft-drift {
             from { transform: translate(0,0); }
@@ -179,6 +179,7 @@
                 <div class="end-content">
                     <h1 class="shine-text" id="end-title">ALL CLEAR</h1>
                     <p id="end-desc" style="font-size: 1.5rem; margin-top: 20px;">...</p>
+                    
                     <button id="reboot-btn" onclick="location.reload()" style="margin-top: 40px;">SYSTEM REBOOT</button>
                     <button id="skip-btn" onclick="skipToEnding()">>> SKIP TO ENDING >></button>
                 </div>
@@ -206,9 +207,8 @@
 
         let gameMode = 'normal'; 
         
-        // 악몽 모드 이동 변수 (대폭 하향)
         let chaosModeActive = false;
-        let frameVelocity = { x: 1.2, y: 1.2 }; // [슈퍼 너프] 속도 4 -> 1.2 (거북이 수준)
+        let frameVelocity = { x: 1.2, y: 1.2 }; 
         let framePos = { x: 0, y: 0 }; 
 
         /* ================= PHASE 1 & 2 ================= */
@@ -474,7 +474,7 @@
                     ctx.lineWidth = 2; ctx.moveTo(w.x, 0); ctx.lineTo(w.x, canvas.height); ctx.stroke(); ctx.restore();
                 } else {
                     let speed = (currentPhase === 'red') ? 6 : 5;
-                    // [슈퍼 너프] 악몽 속도: 11 -> 7.5 -> 5.5 (일반과 비슷)
+                    // [슈퍼 너프] 악몽 속도: 7.5 -> 5.5 (일반과 비슷)
                     if (gameMode === 'nightmare') speed = 5.5; 
 
                     let color = '#ff0000';
@@ -506,19 +506,19 @@
 
         function spawnPattern(phase) {
             if (gameMode === 'nightmare') {
-                // [슈퍼 너프] 악몽 모드 물량: 0.08 -> 0.05 (매우 듬성듬성)
-                let spawnRateWarn = 0.05;
-                let spawnRateEnemy = 0.06;
+                // [슈퍼 너프] 악몽 모드 점선 빈도: 0.05 -> 0.025 (반으로 감소)
+                let spawnRateWarn = 0.025; 
+                let spawnRateEnemy = 0.04; 
 
-                // [슈퍼 너프] 경고 시간: 80 -> 90 프레임 (1.5초)
+                // [슈퍼 너프] 경고 시간: 90 프레임 (1.5초)
                 if (Math.random() < spawnRateWarn) warnings.push({ x: Math.random() * canvas.width, width: 30, timer: 90, active: true }); 
                 
-                // [슈퍼 너프] 일반 적 속도: 5 -> 4
+                // [슈퍼 너프] 일반 적 속도: 4 (아주 느림)
                 if (Math.random() < spawnRateEnemy) enemies.push({ x: Math.random() * canvas.width, y: -20, size: Math.random() * 15 + 10, speed: 4, type: 'normal', color: chaosModeActive ? '#00ffea' : '#b026ff' });
                 return;
             }
 
-            // 노말 모드 (너프 유지)
+            // 노말 모드
             if (phase === 'green') {
                 if (Math.random() < 0.05) enemies.push({ x: Math.random() * canvas.width, y: -20, size: Math.random() * 15 + 10, speed: (Math.random() * 2 + 1), type: 'normal', color: '#33ff33' });
             } else if (phase === 'yellow') {
