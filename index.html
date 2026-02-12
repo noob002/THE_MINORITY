@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE MINORITY: FINAL PROTOCOL</title>
+    <title>THE MINORITY: NIGHTMARE PROTOCOL</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
         :root {
             --main-color: #33ff33;
             --bg-color: #050505;
+            --glitch-color: #ff00ff;
         }
 
         body {
@@ -27,12 +28,19 @@
             transition: color 1s ease;
         }
 
+        /* 테마 클래스 */
         body.mode-green { --main-color: #33ff33; }
         body.mode-yellow { --main-color: #ffcc00; }
         body.mode-red { --main-color: #ff3333; }
         body.mode-break { --main-color: #ffffff; }
         body.mode-clear { --main-color: #00ffff; }
         body.mode-gray { --main-color: #888888; }
+        
+        /* 악몽 모드 테마 (보라색 + 붉은기) */
+        body.mode-nightmare { 
+            --main-color: #b026ff; 
+            text-shadow: 2px 0 var(--glitch-color);
+        }
 
         .crt-frame {
             border: 4px solid var(--main-color);
@@ -47,6 +55,18 @@
             flex-direction: column;
             transition: border-color 1s, box-shadow 1s;
             z-index: 10;
+        }
+
+        /* 악몽 모드일 때 화면 흔들림 효과 */
+        body.mode-nightmare .crt-frame {
+            animation: shake 3s infinite;
+        }
+        @keyframes shake {
+            0% { transform: translate(0, 0); }
+            2% { transform: translate(1px, 1px); }
+            4% { transform: translate(-1px, -1px); }
+            6% { transform: translate(0, 0); }
+            100% { transform: translate(0, 0); }
         }
 
         .scanline {
@@ -68,8 +88,18 @@
         button:hover { background-color: var(--main-color); color: #000; }
         
         #skip-btn { display: none; border-style: dashed; font-size: 1.2rem; margin-top: 10px; opacity: 0.7; }
-        #fail-count-display { font-size: 0.9rem; margin-top: 5px; opacity: 0.5; }
+        
+        /* 악몽 모드 버튼 (기본적으로 숨김) */
+        #nightmare-btn {
+            display: none; 
+            border: 2px solid #b026ff; 
+            color: #b026ff;
+            margin-top: 20px;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
+        /* Phases */
         #screen-phase1, #screen-phase2, #screen-phase3, #screen-end { display: none; width: 100%; text-align: center; }
 
         .question-text { font-size: 2rem; min-height: 80px; margin-bottom: 30px; }
@@ -113,8 +143,10 @@
         <div class="content-area">
             <div id="screen-start" style="text-align: center;">
                 <h1 style="font-size: 3rem;">THE MINORITY</h1>
-                <p>최종 테스트를 시작합니다.</p>
+                <p>시스템에 접속하시겠습니까?</p>
                 <button onclick="startPhase1()" class="blink">SYSTEM START</button>
+                <br>
+                <button id="nightmare-btn" onclick="startNightmare()">☠ NIGHTMARE ☠</button>
             </div>
 
             <div id="screen-phase1">
@@ -154,7 +186,6 @@
                 <div class="end-content">
                     <h1 class="shine-text" id="end-title">ALL CLEAR</h1>
                     <p id="end-desc" style="font-size: 1.5rem; margin-top: 20px;">...</p>
-                    <div id="fail-count-display"></div>
                     
                     <button id="reboot-btn" onclick="location.reload()" style="margin-top: 40px;">SYSTEM REBOOT</button>
                     <button id="skip-btn" onclick="skipToEnding()">>> SKIP TO ENDING >></button>
@@ -164,7 +195,7 @@
     </div>
 
     <script>
-        /* ================= FIXED UTILS (LocalStorage) ================= */
+        /* ================= UTILS ================= */
         function showScreen(id) {
             ['screen-start','screen-phase1','screen-phase2','screen-phase3','screen-end']
                 .forEach(s => document.getElementById(s).style.display = 'none');
@@ -172,11 +203,29 @@
         }
         function setTheme(mode) { document.body.className = `mode-${mode}`; }
 
-        // [중요 수정] 새로고침해도 기억하도록 localStorage 사용
-        // 저장된 실패 횟수 불러오기 (없으면 0)
+        // 로컬스토리지: 실패 횟수 & 클리어 여부 확인
         let failCount = parseInt(localStorage.getItem('minority_fail_count')) || 0;
+        let isGameCleared = localStorage.getItem('minority_game_cleared') === 'true';
 
-        /* ================= PHASE 1 ================= */
+        // 시작 화면 로드 시 악몽 버튼 체크
+        window.onload = function() {
+            if (isGameCleared) {
+                document.getElementById('nightmare-btn').style.display = 'inline-block';
+            }
+        };
+
+        // 현재 모드 (normal / nightmare)
+        let gameMode = 'normal'; 
+
+        /* ================= PHASE 1 & 2 (일반/악몽 공통 or 스킵) ================= */
+        // 악몽 모드는 바로 3단계로 갈 수도 있고, 1,2단계를 어렵게 할 수도 있지만
+        // "극한의 피지컬 게임"을 원하시니 바로 Phase 3(Dodge)의 매운맛 버전으로 연결하겠습니다.
+        
+        function startNightmare() {
+            gameMode = 'nightmare';
+            startPhase3();
+        }
+
         const questions = [
             { q: "비 오는 날이 맑은 날보다 좋다.", rate: 80 }, 
             { q: "10억 받기 vs 말하는 고양이 키우기", rate: 20 },
@@ -185,6 +234,7 @@
         let p1Idx = 0;
 
         function startPhase1() {
+            gameMode = 'normal'; // 일반 모드
             showScreen('screen-phase1');
             document.getElementById('stage-display').innerText = "1 - MINORITY";
             renderP1();
@@ -216,7 +266,7 @@
             if (p1Idx >= questions.length) startPhase2(); else renderP1();
         }
 
-        /* ================= PHASE 2 ================= */
+        /* PHASE 2 */
         let p2Score = 0;
         let p2TimerInterval;
         let p2Time = 100;
@@ -258,7 +308,7 @@
             }
         }
 
-        /* ================= PHASE 3 (SUPER EASY) ================= */
+        /* ================= PHASE 3: SURVIVAL ================= */
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         let gameLoopId;
@@ -277,14 +327,23 @@
 
         function startPhase3() {
             showScreen('screen-phase3');
-            document.getElementById('stage-display').innerText = "3 - SURVIVAL";
             
-            setTheme('green');
+            // 모드에 따른 초기 설정
+            if (gameMode === 'nightmare') {
+                document.getElementById('stage-display').innerText = "☠ NIGHTMARE ☠";
+                setTheme('nightmare');
+                p3TotalTime = 60.00; // 악몽은 60초
+                currentPhase = 'nightmare'; // 악몽 페이즈 시작
+            } else {
+                document.getElementById('stage-display').innerText = "3 - SURVIVAL";
+                setTheme('green');
+                p3TotalTime = 45.00;
+                currentPhase = 'green';
+            }
+            
             enemies = [];
             warnings = [];
-            p3TotalTime = 45.00;
             gameState = 'ready';
-            currentPhase = 'green';
             countdownNum = 3;
             document.getElementById('dodge-timer').innerText = "READY...";
             document.getElementById('break-overlay').style.display = 'none';
@@ -330,8 +389,9 @@
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = "#ffffff";
-            ctx.shadowBlur = 10; ctx.shadowColor = "#fff";
+            // 플레이어 그리기
+            ctx.fillStyle = (gameMode === 'nightmare') ? "#b026ff" : "#ffffff";
+            ctx.shadowBlur = 10; ctx.shadowColor = ctx.fillStyle;
             ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
             ctx.shadowBlur = 0;
 
@@ -345,49 +405,53 @@
             p3TotalTime -= 0.016;
             document.getElementById('dodge-timer').innerText = p3TotalTime.toFixed(2);
 
-            let newPhase = currentPhase;
-            if (p3TotalTime > 30) newPhase = 'green';
-            else if (p3TotalTime > 25) newPhase = 'break1';
-            else if (p3TotalTime > 10) newPhase = 'yellow';
-            else if (p3TotalTime > 5) newPhase = 'break2';
-            else if (p3TotalTime > 0) newPhase = 'red';
-            else {
-                cancelAnimationFrame(gameLoopId);
-                gameClear();
-                return;
-            }
+            // --- 페이즈 관리 ---
+            if (gameMode === 'normal') {
+                // 일반 모드 페이즈 로직 (이전과 동일)
+                let newPhase = currentPhase;
+                if (p3TotalTime > 30) newPhase = 'green';
+                else if (p3TotalTime > 25) newPhase = 'break1';
+                else if (p3TotalTime > 10) newPhase = 'yellow';
+                else if (p3TotalTime > 5) newPhase = 'break2';
+                else if (p3TotalTime > 0) newPhase = 'red';
+                else { cancelAnimationFrame(gameLoopId); gameClear(); return; }
 
-            if (newPhase !== currentPhase) {
-                currentPhase = newPhase;
-                if (currentPhase === 'break1') {
-                    setTheme('break'); enemies = []; warnings = []; startTyping("SYSTEM UPGRADE...");
-                } else if (currentPhase === 'break2') {
-                    setTheme('break'); enemies = []; warnings = []; startTyping("당신은 과연 이 이상을 깰 수 있을까?");
-                } else if (currentPhase === 'green') {
-                    setTheme('green'); document.getElementById('break-overlay').style.display = 'none'; document.getElementById('status-display').innerText = "SAFE";
-                } else if (currentPhase === 'yellow') {
-                    setTheme('yellow'); document.getElementById('break-overlay').style.display = 'none'; document.getElementById('status-display').innerText = "CAUTION";
-                } else if (currentPhase === 'red') {
-                    setTheme('red'); document.getElementById('break-overlay').style.display = 'none'; document.getElementById('status-display').innerText = "CRITICAL";
+                if (newPhase !== currentPhase) {
+                    currentPhase = newPhase;
+                    // 페이즈 전환 효과... (코드 줄임을 위해 생략, 이전과 동일)
+                    if (currentPhase === 'break1') { setTheme('break'); enemies=[]; warnings=[]; startTyping("SYSTEM UPGRADE..."); }
+                    else if (currentPhase === 'break2') { setTheme('break'); enemies=[]; warnings=[]; startTyping("당신은 과연 이 이상을 깰 수 있을까?"); }
+                    else if (currentPhase === 'green') { setTheme('green'); document.getElementById('break-overlay').style.display='none'; }
+                    else if (currentPhase === 'yellow') { setTheme('yellow'); document.getElementById('break-overlay').style.display='none'; }
+                    else if (currentPhase === 'red') { setTheme('red'); document.getElementById('break-overlay').style.display='none'; }
                 }
+            } else {
+                // 악몽 모드: 시간 끝나면 클리어
+                if (p3TotalTime <= 0) { cancelAnimationFrame(gameLoopId); gameClear(); return; }
+                // 악몽 모드는 페이즈 변화 없이 계속 'nightmare' 상태 유지 (점점 어려워지게 할 수도 있음)
             }
 
             if (!currentPhase.includes('break')) spawnPattern(currentPhase);
 
+            // 경고선
             for (let i = warnings.length - 1; i >= 0; i--) {
                 let w = warnings[i];
                 w.timer--;
                 if (w.timer > 0) {
                     ctx.save(); ctx.beginPath(); ctx.setLineDash([10, 10]);
-                    ctx.strokeStyle = (Math.floor(Date.now() / 50) % 2 === 0) ? "#ffcc00" : "#554400";
+                    ctx.strokeStyle = (gameMode==='nightmare') ? "#b026ff" : (Math.floor(Date.now()/50)%2===0 ? "#ffcc00":"#554400");
                     ctx.lineWidth = 2; ctx.moveTo(w.x, 0); ctx.lineTo(w.x, canvas.height); ctx.stroke(); ctx.restore();
                 } else {
-                    let missileSpeed = (currentPhase === 'red') ? 6 : 5; 
-                    enemies.push({ x: w.x - (w.width/2), y: -50, size: w.width, speed: missileSpeed, type: 'blitz', color: '#ff0000' });
+                    // 미사일 속도
+                    let speed = (currentPhase === 'red') ? 6 : 5;
+                    if (gameMode === 'nightmare') speed = 11; // 악몽 속도 (빠르지만 가능함)
+
+                    enemies.push({ x: w.x - (w.width/2), y: -50, size: w.width, speed: speed, type: 'blitz', color: (gameMode==='nightmare'?'#b026ff':'#ff0000') });
                     warnings.splice(i, 1);
                 }
             }
 
+            // 적 이동
             for (let i = 0; i < enemies.length; i++) {
                 let e = enemies[i];
                 e.y += e.speed;
@@ -407,6 +471,14 @@
         }
 
         function spawnPattern(phase) {
+            if (phase === 'nightmare') {
+                // 악몽 난이도: 경고 짧음, 적당한 빈도
+                if (Math.random() < 0.08) warnings.push({ x: Math.random() * canvas.width, width: 30, timer: 50, active: true }); // 경고시간 0.8초
+                if (Math.random() < 0.1) enemies.push({ x: Math.random() * canvas.width, y: -20, size: Math.random() * 15 + 10, speed: 7, type: 'normal', color: '#b026ff' });
+                return;
+            }
+
+            // 일반 난이도 (너프됨)
             if (phase === 'green') {
                 if (Math.random() < 0.05) enemies.push({ x: Math.random() * canvas.width, y: -20, size: Math.random() * 15 + 10, speed: (Math.random() * 2 + 1), type: 'normal', color: '#33ff33' });
             } else if (phase === 'yellow') {
@@ -417,11 +489,10 @@
             }
         }
 
-        /* ================= GAME OVER / ENDING LOGIC ================= */
+        /* ================= GAME OVER / ENDING ================= */
         
         function failGame(title, desc) {
             failCount++; 
-            // [중요] 죽을 때마다 횟수 저장
             localStorage.setItem('minority_fail_count', failCount);
             
             showScreen('screen-end');
@@ -434,11 +505,7 @@
             titleEl.style.color = "red";
             
             document.getElementById('end-desc').innerText = desc;
-            
-            // 디버깅용: 실패 횟수 보여주기 (필요없으면 지워도 됨)
-            document.getElementById('fail-count-display').innerText = `DEATH COUNT: ${failCount}`;
 
-            // 5회 이상이면 스킵 버튼 표시
             if (failCount >= 5) {
                 document.getElementById('skip-btn').style.display = 'inline-block';
             } else {
@@ -450,61 +517,61 @@
         }
 
         function skipToEnding() {
-            // 스킵했으니 횟수 리셋
             localStorage.removeItem('minority_fail_count');
-            
             showScreen('screen-end');
             setTheme('gray');
-            
             document.getElementById('end-canvas').style.display = 'none'; 
             document.getElementById('skip-btn').style.display = 'none'; 
-            document.getElementById('fail-count-display').innerText = "";
-            
             const titleEl = document.getElementById('end-title');
             titleEl.innerText = "SKIPPED";
             titleEl.className = "big-msg"; 
             titleEl.style.color = "#888"; 
-            
-            document.getElementById('end-desc').innerText = "포기하셨습니다. 평범한 결말입니다.";
-            document.getElementById('stage-display').innerText = "END";
-            document.getElementById('status-display').innerText = "GAVE UP";
+            document.getElementById('end-desc').innerText = "평범한 결말입니다. 다시 도전하시겠습니까?";
+            // 스킵 엔딩은 클리어로 인정하지 않음 (악몽 모드 안 열림)
         }
 
         function gameClear() {
-            // 클리어했으니 횟수 리셋
             localStorage.removeItem('minority_fail_count');
             
-            showScreen('screen-end');
-            setTheme('clear');
-            document.getElementById('stage-display').innerText = "ALL CLEAR";
-            document.getElementById('status-display').innerText = "LEGEND";
-            document.getElementById('skip-btn').style.display = 'none';
-            document.getElementById('fail-count-display').innerText = "";
-            
-            document.getElementById('end-canvas').style.display = 'block';
-            const titleEl = document.getElementById('end-title');
-            titleEl.innerText = "ALL CLEAR";
-            titleEl.className = "shine-text"; 
-            titleEl.style.color = "#00ffff";
-            document.getElementById('end-desc').innerText = "축하합니다. 당신은 완벽히 생존했습니다.";
+            // [중요] 노말 모드를 깼다면 클리어 기록 저장!
+            if (gameMode === 'normal') {
+                localStorage.setItem('minority_game_cleared', 'true');
+            }
 
+            showScreen('screen-end');
+            document.getElementById('skip-btn').style.display = 'none';
+            document.getElementById('end-canvas').style.display = 'block';
+
+            const titleEl = document.getElementById('end-title');
+            const descEl = document.getElementById('end-desc');
+            const statusEl = document.getElementById('status-display');
+
+            if (gameMode === 'nightmare') {
+                setTheme('nightmare');
+                titleEl.innerText = "GOD MODE";
+                titleEl.style.color = "#b026ff";
+                descEl.innerText = "당신은 악몽을 지배했습니다.";
+                statusEl.innerText = "GOD";
+            } else {
+                setTheme('clear');
+                titleEl.innerText = "ALL CLEAR";
+                titleEl.style.color = "#00ffff";
+                descEl.innerText = "축하합니다. 모든 테스트를 통과했습니다.";
+                statusEl.innerText = "LEGEND";
+            }
+            titleEl.className = "shine-text";
             startFireworks();
         }
 
         /* ================= FIREWORKS ================= */
-        let fireworks = [];
-        let particles = [];
-        let endCtx, endCanvas;
-
+        let fireworks = [], particles = [], endCtx, endCanvas;
         function startFireworks() {
             endCanvas = document.getElementById('end-canvas');
             endCtx = endCanvas.getContext('2d');
-            endCanvas.width = endCanvas.offsetWidth;
-            endCanvas.height = endCanvas.offsetHeight;
+            endCanvas.width = endCanvas.offsetWidth; endCanvas.height = endCanvas.offsetHeight;
             fireworks = []; particles = [];
             loopFireworks();
         }
-
         function loopFireworks() {
             endCtx.clearRect(0, 0, endCanvas.width, endCanvas.height);
             if (Math.random() < 0.05) {
