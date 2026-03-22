@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE MINORITY: CRT OVERHAUL</title>
+    <title>THE MINORITY: AUDIO OVERHAUL</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -14,17 +14,10 @@
         }
 
         body {
-            background-color: #000;
-            color: var(--main-color);
-            font-family: 'VT323', monospace;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            text-transform: uppercase;
-            user-select: none;
+            background-color: #000; color: var(--main-color);
+            font-family: 'VT323', monospace; margin: 0; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden; text-transform: uppercase; user-select: none;
             transition: color 1s ease;
         }
 
@@ -39,26 +32,17 @@
         body.mode-coward { --main-color: #cd853f; }
 
         .crt-frame {
-            border: 4px solid var(--main-color);
-            padding: 30px;
-            width: 700px;
-            max-width: 95%;
-            height: 550px;
+            border: 4px solid var(--main-color); padding: 30px; width: 700px;
+            max-width: 95%; height: 550px;
             box-shadow: 0 0 20px var(--main-color), inset 0 0 50px rgba(0,0,0,0.8);
-            background-color: var(--bg-color);
-            position: relative; 
-            display: flex;
-            flex-direction: column;
-            transition: border-color 0.5s, box-shadow 0.5s;
-            z-index: 10;
+            background-color: var(--bg-color); position: relative; 
+            display: flex; flex-direction: column; transition: border-color 0.5s, box-shadow 0.5s; z-index: 10;
         }
 
         .crt-frame.chaos-shake { animation: soft-drift 2s infinite alternate; }
         @keyframes soft-drift { from { transform: translate(0,0); } to { transform: translate(1px, 1px); } }
 
-        /* ================= 수정된 레트로 모니터 효과 ================= */
-        
-        /* 1. 위에서 아래로 내려가는 굵은 스캔 바 */
+        /* 레트로 필터 */
         .scanline {
             width: 100%; height: 150px;
             background: linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
@@ -66,23 +50,18 @@
             animation: scanline 5s linear infinite; pointer-events: none; z-index: 999;
         }
         @keyframes scanline { 0% { top: -150px; } 100% { top: 100vh; } }
-
-        /* 2. 촘촘한 고정 가로줄 무늬 (CRT 그리드) */
         .crt-grid {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px);
             pointer-events: none; z-index: 998;
         }
 
-        /* ======================================================= */
-
         .header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--main-color); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.4rem; position: relative; z-index: 11; }
         .content-area { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; width: 100%; z-index: 11; }
 
         button {
             background: transparent; border: 2px solid var(--main-color); color: var(--main-color);
-            font-family: 'VT323', monospace; font-size: 1.8rem; padding: 10px 20px;
-            cursor: pointer; margin: 10px; transition: 0.2s;
+            font-family: 'VT323', monospace; font-size: 1.8rem; padding: 10px 20px; cursor: pointer; margin: 10px; transition: 0.2s;
         }
         button:hover { background-color: var(--main-color); color: #000; }
         
@@ -96,40 +75,24 @@
         }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        /* Secret Hint Style */
-        #secret-hint {
-            margin-top: 30px; font-size: 1.5rem; letter-spacing: 5px; opacity: 0.6; color: #555; min-height: 30px;
-        }
+        #secret-hint { margin-top: 30px; font-size: 1.5rem; letter-spacing: 5px; opacity: 0.6; color: #555; min-height: 30px; }
         .hint-revealed { color: var(--main-color) !important; opacity: 1 !important; animation: glitch 0.5s infinite; }
         @keyframes glitch { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
 
-        /* Meteor Effect */
         #meteor-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999; align-items: center; justify-content: center;
         }
-        .meteor {
-            width: 10px; height: 10px; background: radial-gradient(circle, #fff, #ffcc00, #ff3333);
-            border-radius: 50%; transform: scale(1);
-            animation: impact 2.5s forwards cubic-bezier(0.6, 0.04, 0.98, 0.335);
-        }
-        @keyframes impact {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(50); opacity: 1; }
-            80% { transform: scale(200); background: #fff; opacity: 1; } 
-            100% { transform: scale(500); background: #fff; opacity: 1; }
-        }
+        .meteor { width: 10px; height: 10px; background: radial-gradient(circle, #fff, #ffcc00, #ff3333); border-radius: 50%; transform: scale(1); animation: impact 2.5s forwards cubic-bezier(0.6, 0.04, 0.98, 0.335); }
+        @keyframes impact { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(50); opacity: 1; } 80% { transform: scale(200); background: #fff; opacity: 1; } 100% { transform: scale(500); background: #fff; opacity: 1; } }
         .shake-body { animation: violent-shake 0.1s infinite; }
-        @keyframes violent-shake {
-            0% { transform: translate(0, 0); }
-            25% { transform: translate(-10px, 10px); }
-            50% { transform: translate(10px, -10px); }
-            75% { transform: translate(-10px, -10px); }
-            100% { transform: translate(0, 0); }
-        }
+        @keyframes violent-shake { 0% { transform: translate(0, 0); } 25% { transform: translate(-10px, 10px); } 50% { transform: translate(10px, -10px); } 75% { transform: translate(-10px, -10px); } 100% { transform: translate(0, 0); } }
 
-        /* MODALS */
-        #rank-open-btn { position: absolute; top: 0; left: 0; font-size: 1.2rem; padding: 5px 10px; border: 1px solid var(--main-color); display: block; z-index: 20; }
+        /* MODALS & TOP BUTTONS */
+        .top-left-btns { position: absolute; top: 0; left: 0; z-index: 20; display: flex; gap: 5px; }
+        .top-btn { font-size: 1.2rem; padding: 5px 10px; border: 1px solid var(--main-color); background: transparent; color: var(--main-color); font-family: 'VT323'; cursor: pointer; }
+        .top-btn:hover { background: var(--main-color); color: #000; }
+
         .modal-overlay {
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 80%; height: auto; padding: 20px; background: var(--bg-color); border: 2px solid var(--main-color);
@@ -177,7 +140,10 @@
 
     <div class="crt-frame" id="game-frame">
         <div class="header">
-            <button id="rank-open-btn" onclick="openRanking()">🏆 RANK</button>
+            <div class="top-left-btns" id="top-left-btns">
+                <button class="top-btn" onclick="openRanking()">🏆 RANK</button>
+                <button class="top-btn" id="mute-btn" onclick="toggleMute()">🔊 SOUND: ON</button>
+            </div>
             <div style="flex:1;"></div>
             <div style="text-align: right;">
                 <span>LEVEL: <span id="stage-display">WAITING</span></span><br>
@@ -192,7 +158,6 @@
                 <button onclick="startPhase1()" class="blink">SYSTEM START</button>
                 <br>
                 <button id="nightmare-btn" onclick="startNightmare()">☠ NIGHTMARE ☠</button>
-                
                 <div id="secret-hint"></div>
             </div>
 
@@ -257,6 +222,96 @@
     </div>
 
     <script>
+        /* ================= 🎵 AUDIO SYSTEM (Web Audio API) ================= */
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+        let isMuted = false;
+        let bgmInterval;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            document.getElementById('mute-btn').innerText = isMuted ? "🔇 SOUND: OFF" : "🔊 SOUND: ON";
+            if (isMuted) stopBGM();
+        }
+
+        // 기본 신디사이저 (삐- 소리)
+        function playTone(freq, type, duration, vol=0.1) {
+            if (isMuted || !audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        // 폭발음 (백색소음)
+        function playNoise(duration, vol=0.3) {
+            if (isMuted || !audioCtx) return;
+            const bufferSize = audioCtx.sampleRate * duration;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const gain = audioCtx.createGain();
+            
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            
+            noise.connect(gain);
+            gain.connect(audioCtx.destination);
+            noise.start();
+        }
+
+        // --- 구체적인 효과음 모음 ---
+        function sfxStart() { playTone(440, 'square', 0.1); setTimeout(()=>playTone(660, 'square', 0.2), 100); }
+        function sfxClick() { playTone(880, 'sine', 0.05, 0.05); } // 타자 입력음
+        function sfxHit() { playNoise(0.5, 0.5); playTone(100, 'sawtooth', 0.5, 0.4); } // 사망/데미지 (폭발)
+        function sfxWarn() { playTone(300, 'square', 0.1, 0.05); } // 경고음
+        function sfxClear() { 
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                setTimeout(() => playTone(freq, 'square', 0.2, 0.1), i * 150);
+            });
+        }
+
+        // --- 배경음악 (8비트 심장박동 베이스) ---
+        function startBGM() {
+            if (isMuted || !audioCtx) return;
+            stopBGM();
+            let note = true;
+            let bgmSpeed = 500; // 기본 속도
+
+            bgmInterval = setInterval(() => {
+                // 게임 상태에 따라 동적으로 BGM 속도 변경
+                if (gameState === 'playing' || gameState === 'ready') {
+                    playTone(note ? 110 : 130, 'square', 0.1, 0.05);
+                    note = !note;
+                    
+                    // 시간이 촉박해질수록 심장 박동 빨라짐
+                    if (p3TotalTime < 10) bgmSpeed = 200;
+                    else if (p3TotalTime < 20 || gameMode === 'nightmare') bgmSpeed = 300;
+                }
+            }, bgmSpeed);
+        }
+        function stopBGM() { clearInterval(bgmInterval); }
+
         /* ================= EASTER EGG: MICKEY ================= */
         const secretCode = "mickey";
         let inputKeys = "";
@@ -266,6 +321,7 @@
             if(inputKeys.length > secretCode.length) inputKeys = inputKeys.slice(-secretCode.length);
             
             if(inputKeys === secretCode) {
+                initAudio(); sfxHit(); sfxHit(); // 거대한 폭발음
                 triggerMeteorImpact();
                 inputKeys = ""; 
             }
@@ -286,8 +342,8 @@
             ['screen-start','screen-phase1','screen-phase2','screen-phase3','screen-end']
                 .forEach(s => document.getElementById(s).style.display = 'none');
             document.getElementById(id).style.display = 'block';
-            if (id === 'screen-start') document.getElementById('rank-open-btn').style.display = 'block';
-            else document.getElementById('rank-open-btn').style.display = 'none';
+            if (id === 'screen-start') document.getElementById('top-left-btns').style.display = 'flex';
+            else document.getElementById('top-left-btns').style.display = 'none';
         }
         function setTheme(mode) { document.body.className = `mode-${mode}`; }
 
@@ -299,13 +355,11 @@
 
         window.onload = function() {
             if (isGameCleared) document.getElementById('nightmare-btn').style.display = 'inline-block';
-
             if (failCount > 0) {
                 const hintEl = document.getElementById('secret-hint');
                 let visibleChars = Math.min(failCount, secretCode.length);
                 let revealed = secretCode.substring(0, visibleChars);
                 hintEl.innerText = `UNKNOWN: [ ${revealed} ]`;
-                
                 if (visibleChars >= secretCode.length) {
                     hintEl.innerText = `CODE: [ ${revealed} ]`;
                     hintEl.classList.add('hint-revealed');
@@ -314,25 +368,25 @@
         };
 
         /* ================= RESET LOGIC ================= */
-        function openResetModal() { document.getElementById('reset-confirm-modal').style.display = 'flex'; }
+        function openResetModal() { document.getElementById('reset-confirm-modal').style.display = 'flex'; sfxClick(); }
         function confirmReset(agree) {
             document.getElementById('reset-confirm-modal').style.display = 'none';
             if (agree) {
                 failCount = 0; localStorage.setItem('minority_fail_count', 0);
                 resetUsedCount++; localStorage.setItem('minority_reset_used', resetUsedCount);
+                sfxHit(); // 세탁 시 죄책감(?) 타격음
                 alert("기록이 초기화되었습니다. (시스템이 당신의 선택을 기억합니다.)"); location.reload();
-            }
+            } else sfxClick();
         }
 
         /* ================= RANKING ================= */
         const fakeDataNormal = [ { name: "DEV_KIM", attempts: 0, date: "2024.10" }, { name: "UNKNOWN_01", attempts: 2, date: "2024.11" }, { name: "PLAYER_X", attempts: 24, date: "2024.12" } ];
         const fakeDataNightmare = [ { name: "DEV_KIM", attempts: 3, date: "2024.10" }, { name: "GOD_GAMER", attempts: 7, date: "2024.11" } ];
 
-        let currentRankTab = 'legend';
-        function openRanking() { document.getElementById('rank-modal').style.display = 'flex'; showRank('legend'); }
-        function closeRanking() { document.getElementById('rank-modal').style.display = 'none'; }
+        function openRanking() { initAudio(); sfxClick(); document.getElementById('rank-modal').style.display = 'flex'; showRank('legend'); }
+        function closeRanking() { sfxClick(); document.getElementById('rank-modal').style.display = 'none'; }
         function showRank(type) {
-            currentRankTab = type; document.getElementById('tab-legend').className = (type === 'legend' ? 'rank-tab active' : 'rank-tab'); document.getElementById('tab-god').className = (type === 'god' ? 'rank-tab active' : 'rank-tab');
+            document.getElementById('tab-legend').className = (type === 'legend' ? 'rank-tab active' : 'rank-tab'); document.getElementById('tab-god').className = (type === 'god' ? 'rank-tab active' : 'rank-tab');
             let list = (type === 'legend') ? [...fakeDataNormal] : [...fakeDataNightmare];
             let userBest = (type === 'legend') ? bestRecordNormal : bestRecordNightmare;
             let userIncluded = false;
@@ -341,6 +395,7 @@
             const tbody = document.getElementById('rank-tbody'); tbody.innerHTML = "";
             if (list.length === 0 && !userIncluded) { tbody.innerHTML = "<tr><td colspan='4'>NO DATA</td></tr>"; return; }
             list.forEach((item, index) => { const tr = document.createElement('tr'); if (item.isUser) tr.className = "rank-user"; tr.innerHTML = `<td>${index + 1}</td><td>${item.name}</td><td>${item.attempts} FAILS</td><td>${item.date}</td>`; tbody.appendChild(tr); });
+            sfxClick();
         }
         function saveRecord(isNightmare) {
             if (!isNightmare) { if (failCount < bestRecordNormal) { bestRecordNormal = failCount; localStorage.setItem('minority_best_normal', bestRecordNormal); } }
@@ -349,26 +404,45 @@
 
         /* ================= GAME LOGIC ================= */
         let gameMode = 'normal'; let chaosModeActive = false; let frameVelocity = { x: 1.2, y: 1.2 }; let framePos = { x: 0, y: 0 }; 
-        function startNightmare() { gameMode = 'nightmare'; startPhase3(); }
+        
+        function startNightmare() { initAudio(); sfxStart(); gameMode = 'nightmare'; startPhase3(); }
 
         const questions = [ { q: "비 오는 날이 맑은 날보다 좋다.", rate: 80 }, { q: "10억 받기 vs 말하는 고양이 키우기", rate: 20 }, { q: "솔직히 탕수육은 부먹이다.", rate: 45 } ];
         let p1Idx = 0;
-        function startPhase1() { gameMode = 'normal'; showScreen('screen-phase1'); document.getElementById('stage-display').innerText = "1 - MINORITY"; renderP1(); }
+        function startPhase1() { initAudio(); sfxStart(); gameMode = 'normal'; showScreen('screen-phase1'); document.getElementById('stage-display').innerText = "1 - MINORITY"; renderP1(); }
         function renderP1() { const q = questions[p1Idx]; document.getElementById('p1-text').innerText = q.q; document.getElementById('p1-btns').style.display = 'flex'; document.getElementById('bar-bg').style.display = 'none'; document.getElementById('next-btn').style.display = 'none'; document.getElementById('p1-msg').innerText = ""; document.getElementById('bar-fill').style.width = "0%"; }
-        function checkP1(agree) { const q = questions[p1Idx]; const rate = agree ? q.rate : (100 - q.rate); document.getElementById('p1-btns').style.display = 'none'; document.getElementById('bar-bg').style.display = 'block'; setTimeout(() => document.getElementById('bar-fill').style.width = rate + "%", 50); if (rate < 50) { document.getElementById('p1-msg').innerText = `생존. 소수(${rate}%)입니다.`; document.getElementById('next-btn').style.display = 'inline-block'; } else { failGame("MAJORITY DETECTED", "당신은 다수에 속했습니다."); } }
-        function nextPhase1() { p1Idx++; if (p1Idx >= questions.length) startPhase2(); else renderP1(); }
+        function checkP1(agree) { 
+            sfxClick();
+            const q = questions[p1Idx]; const rate = agree ? q.rate : (100 - q.rate); document.getElementById('p1-btns').style.display = 'none'; document.getElementById('bar-bg').style.display = 'block'; setTimeout(() => document.getElementById('bar-fill').style.width = rate + "%", 50); 
+            if (rate < 50) { document.getElementById('p1-msg').innerText = `생존. 소수(${rate}%)입니다.`; document.getElementById('next-btn').style.display = 'inline-block'; } 
+            else { failGame("MAJORITY DETECTED", "당신은 다수에 속했습니다."); } 
+        }
+        function nextPhase1() { sfxClick(); p1Idx++; if (p1Idx >= questions.length) startPhase2(); else renderP1(); }
 
         let p2Score = 0; let p2TimerInterval; let p2Time = 100;
         function startPhase2() { setTheme('red'); document.getElementById('stage-display').innerText = "2 - HACKING"; document.getElementById('status-display').innerText = "WARNING"; showScreen('screen-phase2'); nextP2(); }
-        function nextP2() { if (p2Score >= 3) { clearInterval(p2TimerInterval); startPhase3(); return; } const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; let code = ""; for(let i=0; i<4; i++) code += chars.charAt(Math.floor(Math.random()*chars.length)); document.getElementById('p2-code').innerText = code; document.getElementById('p2-input').value = ""; document.getElementById('p2-input').focus(); p2Time = 100; clearInterval(p2TimerInterval); p2TimerInterval = setInterval(() => { p2Time -= 1.5; document.getElementById('p2-timer').style.width = p2Time + "%"; if (p2Time <= 0) { clearInterval(p2TimerInterval); failGame("SYSTEM HACKED", "방화벽이 뚫렸습니다."); } }, 50); }
-        function checkP2(e) { if (e.key === "Enter") { if (document.getElementById('p2-code').innerText === document.getElementById('p2-input').value.toUpperCase()) { p2Score++; document.getElementById('p2-info').innerText = `DEFENSE: ${p2Score} / 3`; nextP2(); } else { document.getElementById('p2-input').value = ""; } } }
+        function nextP2() { 
+            if (p2Score >= 3) { clearInterval(p2TimerInterval); startPhase3(); return; } 
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; let code = ""; for(let i=0; i<4; i++) code += chars.charAt(Math.floor(Math.random()*chars.length)); document.getElementById('p2-code').innerText = code; document.getElementById('p2-input').value = ""; document.getElementById('p2-input').focus(); p2Time = 100; clearInterval(p2TimerInterval); p2TimerInterval = setInterval(() => { p2Time -= 1.5; document.getElementById('p2-timer').style.width = p2Time + "%"; if (p2Time <= 0) { clearInterval(p2TimerInterval); failGame("SYSTEM HACKED", "방화벽이 뚫렸습니다."); } }, 50); 
+        }
+        function checkP2(e) { 
+            if(e.key.length === 1 || e.key === 'Backspace') sfxClick(); // 타자 소리
+            if (e.key === "Enter") { if (document.getElementById('p2-code').innerText === document.getElementById('p2-input').value.toUpperCase()) { p2Score++; document.getElementById('p2-info').innerText = `DEFENSE: ${p2Score} / 3`; nextP2(); } else { document.getElementById('p2-input').value = ""; sfxWarn(); } } 
+        }
 
         const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d'); let gameLoopId;
         let p3TotalTime = 45.00; let player = { x: 300, y: 175, size: 10, color: '#fff' }; let enemies = []; let warnings = []; let gameState = 'ready'; let currentPhase = 'green'; let countdownNum = 3;
         let typeWriterIdx = 0; let typeWriterText = ""; let typeWriterInterval;
 
-        function startPhase3() { showScreen('screen-phase3'); enemies = []; warnings = []; gameState = 'ready'; countdownNum = 3; chaosModeActive = false; const frame = document.getElementById('game-frame'); frame.style.position = 'relative'; frame.style.left = 'auto'; frame.style.top = 'auto'; frame.classList.remove('chaos-shake'); document.body.style.display = 'flex'; if (gameMode === 'nightmare') { document.getElementById('stage-display').innerText = "☠ NIGHTMARE ☠"; setTheme('nightmare'); p3TotalTime = 60.00; currentPhase = 'nightmare'; } else { document.getElementById('stage-display').innerText = "3 - SURVIVAL"; setTheme('green'); p3TotalTime = 45.00; currentPhase = 'green'; } document.getElementById('dodge-timer').innerText = "READY..."; document.getElementById('break-overlay').style.display = 'none'; canvas.addEventListener('mousemove', (e) => { const rect = canvas.getBoundingClientRect(); player.x = e.clientX - rect.left; player.y = e.clientY - rect.top; }); const countInterval = setInterval(() => { if (countdownNum > 0) { document.getElementById('dodge-timer').innerText = `START IN ${countdownNum}...`; countdownNum--; } else { clearInterval(countInterval); gameState = 'playing'; } }, 1000); if(gameLoopId) cancelAnimationFrame(gameLoopId); gameLoopId = requestAnimationFrame(gameLoop); }
-        function startTyping(text) { const overlay = document.getElementById('break-overlay'); overlay.style.display = 'block'; overlay.innerText = ""; typeWriterText = text; typeWriterIdx = 0; clearInterval(typeWriterInterval); typeWriterInterval = setInterval(() => { if (typeWriterIdx < typeWriterText.length) { overlay.innerText += typeWriterText.charAt(typeWriterIdx); typeWriterIdx++; } else { clearInterval(typeWriterInterval); } }, 100); }
+        function startPhase3() { 
+            showScreen('screen-phase3'); enemies = []; warnings = []; gameState = 'ready'; countdownNum = 3; chaosModeActive = false; const frame = document.getElementById('game-frame'); frame.style.position = 'relative'; frame.style.left = 'auto'; frame.style.top = 'auto'; frame.classList.remove('chaos-shake'); document.body.style.display = 'flex'; if (gameMode === 'nightmare') { document.getElementById('stage-display').innerText = "☠ NIGHTMARE ☠"; setTheme('nightmare'); p3TotalTime = 60.00; currentPhase = 'nightmare'; } else { document.getElementById('stage-display').innerText = "3 - SURVIVAL"; setTheme('green'); p3TotalTime = 45.00; currentPhase = 'green'; } document.getElementById('dodge-timer').innerText = "READY..."; document.getElementById('break-overlay').style.display = 'none'; canvas.addEventListener('mousemove', (e) => { const rect = canvas.getBoundingClientRect(); player.x = e.clientX - rect.left; player.y = e.clientY - rect.top; }); 
+            const countInterval = setInterval(() => { 
+                if (countdownNum > 0) { sfxClick(); document.getElementById('dodge-timer').innerText = `START IN ${countdownNum}...`; countdownNum--; } 
+                else { sfxStart(); startBGM(); clearInterval(countInterval); gameState = 'playing'; } 
+            }, 1000); 
+            if(gameLoopId) cancelAnimationFrame(gameLoopId); gameLoopId = requestAnimationFrame(gameLoop); 
+        }
+        function startTyping(text) { const overlay = document.getElementById('break-overlay'); overlay.style.display = 'block'; overlay.innerText = ""; typeWriterText = text; typeWriterIdx = 0; clearInterval(typeWriterInterval); typeWriterInterval = setInterval(() => { if (typeWriterIdx < typeWriterText.length) { sfxClick(); overlay.innerText += typeWriterText.charAt(typeWriterIdx); typeWriterIdx++; } else { clearInterval(typeWriterInterval); } }, 100); }
         function updateChaosFrame() { const frame = document.getElementById('game-frame'); if (!chaosModeActive) { chaosModeActive = true; const rect = frame.getBoundingClientRect(); framePos.x = rect.left; framePos.y = rect.top; document.body.style.display = 'block'; frame.style.position = 'absolute'; frame.style.margin = '0'; frame.style.left = framePos.x + 'px'; frame.style.top = framePos.y + 'px'; setTheme('chaos'); frame.classList.add('chaos-shake'); document.getElementById('status-display').innerText = "ERROR!!"; } framePos.x += frameVelocity.x; framePos.y += frameVelocity.y; if (framePos.x <= 0 || framePos.x + frame.offsetWidth >= window.innerWidth) frameVelocity.x *= -1; if (framePos.y <= 0 || framePos.y + frame.offsetHeight >= window.innerHeight) frameVelocity.y *= -1; frame.style.left = framePos.x + 'px'; frame.style.top = framePos.y + 'px'; }
 
         function gameLoop() {
@@ -376,7 +450,7 @@
             if (gameState === 'ready') { ctx.fillStyle = "#ffffff"; ctx.font = "40px VT323"; ctx.textAlign = "center"; ctx.fillText(countdownNum > 0 ? countdownNum : "GO!", canvas.width/2, canvas.height/2); gameLoopId = requestAnimationFrame(gameLoop); return; }
             p3TotalTime -= 0.016; document.getElementById('dodge-timer').innerText = p3TotalTime.toFixed(2);
             if (gameMode === 'nightmare') { if (p3TotalTime <= 30) { updateChaosFrame(); } if (p3TotalTime <= 0) { cancelAnimationFrame(gameLoopId); gameClear(); return; } }
-            else { let newPhase = currentPhase; if (p3TotalTime > 30) newPhase = 'green'; else if (p3TotalTime > 25) newPhase = 'break1'; else if (p3TotalTime > 10) newPhase = 'yellow'; else if (p3TotalTime > 5) newPhase = 'break2'; else if (p3TotalTime > 0) newPhase = 'red'; else { cancelAnimationFrame(gameLoopId); gameClear(); return; } if (newPhase !== currentPhase) { currentPhase = newPhase; if (currentPhase === 'break1') { setTheme('break'); enemies=[]; warnings=[]; startTyping("SYSTEM UPGRADE..."); } else if (currentPhase === 'break2') { setTheme('break'); enemies=[]; warnings=[]; startTyping("당신은 과연 이 이상을 깰 수 있을까?"); } else if (currentPhase === 'green') { setTheme('green'); document.getElementById('break-overlay').style.display='none'; } else if (currentPhase === 'yellow') { setTheme('yellow'); document.getElementById('break-overlay').style.display='none'; } else if (currentPhase === 'red') { setTheme('red'); document.getElementById('break-overlay').style.display='none'; } } }
+            else { let newPhase = currentPhase; if (p3TotalTime > 30) newPhase = 'green'; else if (p3TotalTime > 25) newPhase = 'break1'; else if (p3TotalTime > 10) newPhase = 'yellow'; else if (p3TotalTime > 5) newPhase = 'break2'; else if (p3TotalTime > 0) newPhase = 'red'; else { cancelAnimationFrame(gameLoopId); gameClear(); return; } if (newPhase !== currentPhase) { currentPhase = newPhase; if (currentPhase === 'break1') { setTheme('break'); enemies=[]; warnings=[]; startTyping("SYSTEM UPGRADE..."); stopBGM(); } else if (currentPhase === 'break2') { setTheme('break'); enemies=[]; warnings=[]; startTyping("당신은 과연 이 이상을 깰 수 있을까?"); stopBGM(); } else if (currentPhase === 'green') { setTheme('green'); document.getElementById('break-overlay').style.display='none'; startBGM(); } else if (currentPhase === 'yellow') { setTheme('yellow'); document.getElementById('break-overlay').style.display='none'; startBGM(); } else if (currentPhase === 'red') { setTheme('red'); document.getElementById('break-overlay').style.display='none'; startBGM(); } } }
             if (!currentPhase.includes('break')) spawnPattern(currentPhase);
             for (let i = warnings.length - 1; i >= 0; i--) { let w = warnings[i]; w.timer--; if (w.timer > 0) { ctx.save(); ctx.beginPath(); ctx.setLineDash([10, 10]); let warnColor = "#ffcc00"; if(gameMode === 'nightmare') warnColor = "#b026ff"; if(chaosModeActive) warnColor = "#00ffea"; ctx.strokeStyle = (Math.floor(Date.now()/50)%2===0) ? warnColor : "#222"; ctx.lineWidth = 2; ctx.moveTo(w.x, 0); ctx.lineTo(w.x, canvas.height); ctx.stroke(); ctx.restore(); } else { let speed = (currentPhase === 'red') ? 6 : 5; if (gameMode === 'nightmare') speed = 5.5; let color = '#ff0000'; if (gameMode === 'nightmare') color = '#b026ff'; if (chaosModeActive) color = '#00ffea'; enemies.push({ x: w.x - (w.width/2), y: -50, size: w.width, speed: speed, type: 'blitz', color: color }); warnings.splice(i, 1); } }
             for (let i = 0; i < enemies.length; i++) { let e = enemies[i]; e.y += e.speed; ctx.fillStyle = e.color; let height = (e.type === 'blitz') ? canvas.height : e.size; ctx.fillRect(e.x, e.y, e.size, height); if (player.x < e.x + e.size && player.x + player.size > e.x && player.y < e.y + height && player.y + player.size > e.y) { cancelAnimationFrame(gameLoopId); failGame("KILLED", "생존에 실패했습니다."); return; } }
@@ -385,15 +459,19 @@
         }
 
         function spawnPattern(phase) {
-            if (gameMode === 'nightmare') { let spawnRateWarn = 0.025; let spawnRateEnemy = 0.04; if (Math.random() < spawnRateWarn) warnings.push({ x: Math.random() * canvas.width, width: 30, timer: 90, active: true }); if (Math.random() < spawnRateEnemy) enemies.push({ x: Math.random() * canvas.width, y: -20, size: Math.random() * 15 + 10, speed: 4, type: 'normal', color: chaosModeActive ? '#00ffea' : '#b026ff' }); return; }
+            if (gameMode === 'nightmare') { let spawnRateWarn = 0.025; let spawnRateEnemy = 0.04; if (Math.random() < spawnRateWarn) { warnings.push({ x: Math.random() * canvas.width, width: 30, timer: 90, active: true }); sfxWarn(); } if (Math.random() < spawnRateEnemy) enemies.push({ x: Math.random() * canvas.width, y: -20, size: Math.random() * 15 + 10, speed: 4, type: 'normal', color: chaosModeActive ? '#00ffea' : '#b026ff' }); return; }
             if (phase === 'green') { if (Math.random() < 0.05) enemies.push({ x: Math.random() * canvas.width, y: -20, size: Math.random() * 15 + 10, speed: (Math.random() * 2 + 1), type: 'normal', color: '#33ff33' }); }
-            else if (phase === 'yellow') { if (Math.random() < 0.04) warnings.push({ x: Math.random() * canvas.width, width: 25, timer: 90, active: true }); }
-            else if (phase === 'red') { if (Math.random() < 0.05) warnings.push({ x: Math.random() * canvas.width, width: 30, timer: 100, active: true }); if (Math.random() < 0.08) enemies.push({ x: Math.random() * canvas.width, y: -20, size: Math.random() * 15 + 10, speed: (Math.random() * 2 + 2), type: 'normal', color: '#ff3333' }); }
+            else if (phase === 'yellow') { if (Math.random() < 0.04) { warnings.push({ x: Math.random() * canvas.width, width: 25, timer: 90, active: true }); sfxWarn(); } }
+            else if (phase === 'red') { if (Math.random() < 0.05) { warnings.push({ x: Math.random() * canvas.width, width: 30, timer: 100, active: true }); sfxWarn(); } if (Math.random() < 0.08) enemies.push({ x: Math.random() * canvas.width, y: -20, size: Math.random() * 15 + 10, speed: (Math.random() * 2 + 2), type: 'normal', color: '#ff3333' }); }
         }
 
-        function failGame(title, desc) { failCount++; localStorage.setItem('minority_fail_count', failCount); showScreen('screen-end'); setTheme('red'); document.getElementById('end-canvas').style.display = 'none'; document.getElementById('end-title').innerText = title; document.getElementById('end-title').className = "big-msg"; document.getElementById('end-title').style.color = "red"; document.getElementById('end-desc').innerText = desc; document.getElementById('shame-display').style.display = 'none'; if (failCount >= 5) document.getElementById('skip-btn').style.display = 'inline-block'; else document.getElementById('skip-btn').style.display = 'none'; clearInterval(p2TimerInterval); if(gameLoopId) cancelAnimationFrame(gameLoopId); }
-        function skipToEnding() { localStorage.removeItem('minority_fail_count'); showScreen('screen-end'); setTheme('gray'); document.getElementById('end-canvas').style.display = 'none'; document.getElementById('skip-btn').style.display = 'none'; document.getElementById('end-title').innerText = "SKIPPED"; document.getElementById('end-title').className = "big-msg"; document.getElementById('end-title').style.color = "#888"; document.getElementById('end-desc').innerText = "평범한 결말입니다. 다시 도전하시겠습니까?"; }
+        function failGame(title, desc) { 
+            stopBGM(); sfxHit(); // 데미지 폭발음
+            failCount++; localStorage.setItem('minority_fail_count', failCount); showScreen('screen-end'); setTheme('red'); document.getElementById('end-canvas').style.display = 'none'; document.getElementById('end-title').innerText = title; document.getElementById('end-title').className = "big-msg"; document.getElementById('end-title').style.color = "red"; document.getElementById('end-desc').innerText = desc; document.getElementById('shame-display').style.display = 'none'; if (failCount >= 5) document.getElementById('skip-btn').style.display = 'inline-block'; else document.getElementById('skip-btn').style.display = 'none'; clearInterval(p2TimerInterval); if(gameLoopId) cancelAnimationFrame(gameLoopId); 
+        }
+        function skipToEnding() { sfxClick(); localStorage.removeItem('minority_fail_count'); showScreen('screen-end'); setTheme('gray'); document.getElementById('end-canvas').style.display = 'none'; document.getElementById('skip-btn').style.display = 'none'; document.getElementById('end-title').innerText = "SKIPPED"; document.getElementById('end-title').className = "big-msg"; document.getElementById('end-title').style.color = "#888"; document.getElementById('end-desc').innerText = "평범한 결말입니다. 다시 도전하시겠습니까?"; }
         function gameClear() {
+            stopBGM(); sfxClear(); // 클리어 사운드
             saveRecord(gameMode === 'nightmare'); localStorage.removeItem('minority_fail_count'); failCount = 0; if (gameMode === 'normal') localStorage.setItem('minority_game_cleared', 'true');
             showScreen('screen-end'); document.getElementById('skip-btn').style.display = 'none'; document.getElementById('end-canvas').style.display = 'block'; const titleEl = document.getElementById('end-title'); const descEl = document.getElementById('end-desc'); const statusEl = document.getElementById('status-display'); const shameEl = document.getElementById('shame-display');
             if (resetUsedCount > 0) { setTheme('coward'); titleEl.innerText = "COWARD"; titleEl.style.color = "#cd853f"; descEl.innerText = "당신은 기록을 세탁했습니다."; statusEl.innerText = "COWARD"; shameEl.style.display = 'inline-block'; shameEl.innerText = `RESET USED: ${resetUsedCount} TIMES`; }
