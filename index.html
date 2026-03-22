@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE MINORITY: AUDIO OVERHAUL</title>
+    <title>THE MINORITY: MAIN THEME</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -62,6 +62,7 @@
         button {
             background: transparent; border: 2px solid var(--main-color); color: var(--main-color);
             font-family: 'VT323', monospace; font-size: 1.8rem; padding: 10px 20px; cursor: pointer; margin: 10px; transition: 0.2s;
+            position: relative; z-index: 15;
         }
         button:hover { background-color: var(--main-color); color: #000; }
         
@@ -130,6 +131,14 @@
         .blink { animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
         .shame-text { color: #ff3333; font-size: 1.5rem; margin-top: 10px; font-weight: bold; border: 1px dashed #ff3333; padding: 5px; display: inline-block;}
+        
+        /* 첫 클릭 유도 오버레이 */
+        #click-to-start-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: flex-end;
+            pointer-events: none; z-index: 9999;
+        }
+        .click-text { margin-bottom: 20px; font-size: 1.2rem; color: #888; animation: blink 2s infinite; }
     </style>
 </head>
 <body class="mode-green">
@@ -137,6 +146,8 @@
 
     <div class="crt-grid"></div>
     <div class="scanline"></div>
+    
+    <div id="click-to-start-overlay"><div class="click-text" id="click-text">CLICK ANYWHERE TO INITIALIZE AUDIO...</div></div>
 
     <div class="crt-frame" id="game-frame">
         <div class="header">
@@ -222,11 +233,16 @@
     </div>
 
     <script>
-        /* ================= 🎵 AUDIO SYSTEM (Web Audio API) ================= */
+        /* ================= 🎵 AUDIO SYSTEM ================= */
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
         let isMuted = false;
+        
         let bgmInterval;
+        let mainBgmInterval;
+        let isMainBgmPlaying = false;
+        let mainMelody = [110.00, 130.81, 164.81, 130.81]; // 기괴하고 어두운 4음계 아르페지오 (A2, C3, E3, C3)
+        let mainMelodyStep = 0;
 
         function initAudio() {
             if (!audioCtx) {
@@ -237,13 +253,27 @@
             }
         }
 
+        // 아무곳이나 클릭하면 오디오 컨텍스트 초기화 및 메인 BGM 시작
+        document.body.addEventListener('click', () => {
+            document.getElementById('click-text').style.display = 'none';
+            initAudio();
+            if (!isMainBgmPlaying && gameState === 'ready' && !isMuted) {
+                startMainBGM();
+            }
+        }, {once: true});
+
         function toggleMute() {
             isMuted = !isMuted;
             document.getElementById('mute-btn').innerText = isMuted ? "🔇 SOUND: OFF" : "🔊 SOUND: ON";
-            if (isMuted) stopBGM();
+            if (isMuted) {
+                stopBGM();
+                stopMainBGM();
+            } else {
+                if (gameState === 'playing' || gameState === 'survival') startBGM();
+                else startMainBGM();
+            }
         }
 
-        // 기본 신디사이저 (삐- 소리)
         function playTone(freq, type, duration, vol=0.1) {
             if (isMuted || !audioCtx) return;
             const osc = audioCtx.createOscillator();
@@ -260,7 +290,6 @@
             osc.stop(audioCtx.currentTime + duration);
         }
 
-        // 폭발음 (백색소음)
         function playNoise(duration, vol=0.3) {
             if (isMuted || !audioCtx) return;
             const bufferSize = audioCtx.sampleRate * duration;
@@ -280,31 +309,39 @@
             noise.start();
         }
 
-        // --- 구체적인 효과음 모음 ---
+        // --- 효과음 ---
         function sfxStart() { playTone(440, 'square', 0.1); setTimeout(()=>playTone(660, 'square', 0.2), 100); }
-        function sfxClick() { playTone(880, 'sine', 0.05, 0.05); } // 타자 입력음
-        function sfxHit() { playNoise(0.5, 0.5); playTone(100, 'sawtooth', 0.5, 0.4); } // 사망/데미지 (폭발)
-        function sfxWarn() { playTone(300, 'square', 0.1, 0.05); } // 경고음
-        function sfxClear() { 
-            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
-                setTimeout(() => playTone(freq, 'square', 0.2, 0.1), i * 150);
-            });
+        function sfxClick() { playTone(880, 'sine', 0.05, 0.05); } 
+        function sfxHit() { playNoise(0.5, 0.5); playTone(100, 'sawtooth', 0.5, 0.4); } 
+        function sfxWarn() { playTone(300, 'square', 0.1, 0.05); } 
+        function sfxClear() { [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => { setTimeout(() => playTone(freq, 'square', 0.2, 0.1), i * 150); }); }
+
+        // --- 메인 BGM (Phase 1, 2, 시작화면) ---
+        function startMainBGM() {
+            if (isMuted || !audioCtx || isMainBgmPlaying) return;
+            isMainBgmPlaying = true;
+            mainBgmInterval = setInterval(() => {
+                playTone(mainMelody[mainMelodyStep], 'square', 0.2, 0.05);
+                mainMelodyStep = (mainMelodyStep + 1) % mainMelody.length;
+            }, 600); // 느린 템포
+        }
+        function stopMainBGM() {
+            clearInterval(mainBgmInterval);
+            isMainBgmPlaying = false;
         }
 
-        // --- 배경음악 (8비트 심장박동 베이스) ---
+        // --- 생존 BGM (Phase 3 전용 심장박동) ---
         function startBGM() {
             if (isMuted || !audioCtx) return;
+            stopMainBGM(); // 메인 노래 정지
             stopBGM();
             let note = true;
-            let bgmSpeed = 500; // 기본 속도
+            let bgmSpeed = 500; 
 
             bgmInterval = setInterval(() => {
-                // 게임 상태에 따라 동적으로 BGM 속도 변경
-                if (gameState === 'playing' || gameState === 'ready') {
+                if (gameState === 'playing' || gameState === 'survival') {
                     playTone(note ? 110 : 130, 'square', 0.1, 0.05);
                     note = !note;
-                    
-                    // 시간이 촉박해질수록 심장 박동 빨라짐
                     if (p3TotalTime < 10) bgmSpeed = 200;
                     else if (p3TotalTime < 20 || gameMode === 'nightmare') bgmSpeed = 300;
                 }
@@ -312,35 +349,22 @@
         }
         function stopBGM() { clearInterval(bgmInterval); }
 
-        /* ================= EASTER EGG: MICKEY ================= */
-        const secretCode = "mickey";
-        let inputKeys = "";
-
+        /* ================= EASTER EGG ================= */
+        const secretCode = "mickey"; let inputKeys = "";
         window.addEventListener('keydown', (e) => {
-            inputKeys += e.key.toLowerCase();
-            if(inputKeys.length > secretCode.length) inputKeys = inputKeys.slice(-secretCode.length);
-            
+            inputKeys += e.key.toLowerCase(); if(inputKeys.length > secretCode.length) inputKeys = inputKeys.slice(-secretCode.length);
             if(inputKeys === secretCode) {
-                initAudio(); sfxHit(); sfxHit(); // 거대한 폭발음
-                triggerMeteorImpact();
+                initAudio(); stopMainBGM(); stopBGM(); sfxHit(); sfxHit(); 
+                document.getElementById('meteor-overlay').style.display = 'flex'; 
+                document.body.classList.add('shake-body');
+                setTimeout(() => { localStorage.clear(); location.reload(); }, 2500);
                 inputKeys = ""; 
             }
         });
 
-        function triggerMeteorImpact() {
-            const overlay = document.getElementById('meteor-overlay');
-            overlay.style.display = 'flex'; 
-            document.body.classList.add('shake-body');
-            setTimeout(() => {
-                localStorage.clear(); 
-                location.reload();
-            }, 2500);
-        }
-
-        /* ================= UTILS & LOCAL STORAGE ================= */
+        /* ================= UTILS ================= */
         function showScreen(id) {
-            ['screen-start','screen-phase1','screen-phase2','screen-phase3','screen-end']
-                .forEach(s => document.getElementById(s).style.display = 'none');
+            ['screen-start','screen-phase1','screen-phase2','screen-phase3','screen-end'].forEach(s => document.getElementById(s).style.display = 'none');
             document.getElementById(id).style.display = 'block';
             if (id === 'screen-start') document.getElementById('top-left-btns').style.display = 'flex';
             else document.getElementById('top-left-btns').style.display = 'none';
@@ -358,28 +382,25 @@
             if (failCount > 0) {
                 const hintEl = document.getElementById('secret-hint');
                 let visibleChars = Math.min(failCount, secretCode.length);
-                let revealed = secretCode.substring(0, visibleChars);
-                hintEl.innerText = `UNKNOWN: [ ${revealed} ]`;
+                hintEl.innerText = `UNKNOWN: [ ${secretCode.substring(0, visibleChars)} ]`;
                 if (visibleChars >= secretCode.length) {
-                    hintEl.innerText = `CODE: [ ${revealed} ]`;
+                    hintEl.innerText = `CODE: [ ${secretCode.substring(0, visibleChars)} ]`;
                     hintEl.classList.add('hint-revealed');
                 }
             }
         };
 
-        /* ================= RESET LOGIC ================= */
+        /* ================= RESET & RANKING ================= */
         function openResetModal() { document.getElementById('reset-confirm-modal').style.display = 'flex'; sfxClick(); }
         function confirmReset(agree) {
             document.getElementById('reset-confirm-modal').style.display = 'none';
             if (agree) {
                 failCount = 0; localStorage.setItem('minority_fail_count', 0);
                 resetUsedCount++; localStorage.setItem('minority_reset_used', resetUsedCount);
-                sfxHit(); // 세탁 시 죄책감(?) 타격음
-                alert("기록이 초기화되었습니다. (시스템이 당신의 선택을 기억합니다.)"); location.reload();
+                sfxHit(); alert("기록이 초기화되었습니다."); location.reload();
             } else sfxClick();
         }
 
-        /* ================= RANKING ================= */
         const fakeDataNormal = [ { name: "DEV_KIM", attempts: 0, date: "2024.10" }, { name: "UNKNOWN_01", attempts: 2, date: "2024.11" }, { name: "PLAYER_X", attempts: 24, date: "2024.12" } ];
         const fakeDataNightmare = [ { name: "DEV_KIM", attempts: 3, date: "2024.10" }, { name: "GOD_GAMER", attempts: 7, date: "2024.11" } ];
 
@@ -426,7 +447,7 @@
             const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; let code = ""; for(let i=0; i<4; i++) code += chars.charAt(Math.floor(Math.random()*chars.length)); document.getElementById('p2-code').innerText = code; document.getElementById('p2-input').value = ""; document.getElementById('p2-input').focus(); p2Time = 100; clearInterval(p2TimerInterval); p2TimerInterval = setInterval(() => { p2Time -= 1.5; document.getElementById('p2-timer').style.width = p2Time + "%"; if (p2Time <= 0) { clearInterval(p2TimerInterval); failGame("SYSTEM HACKED", "방화벽이 뚫렸습니다."); } }, 50); 
         }
         function checkP2(e) { 
-            if(e.key.length === 1 || e.key === 'Backspace') sfxClick(); // 타자 소리
+            if(e.key.length === 1 || e.key === 'Backspace') sfxClick();
             if (e.key === "Enter") { if (document.getElementById('p2-code').innerText === document.getElementById('p2-input').value.toUpperCase()) { p2Score++; document.getElementById('p2-info').innerText = `DEFENSE: ${p2Score} / 3`; nextP2(); } else { document.getElementById('p2-input').value = ""; sfxWarn(); } } 
         }
 
@@ -435,7 +456,7 @@
         let typeWriterIdx = 0; let typeWriterText = ""; let typeWriterInterval;
 
         function startPhase3() { 
-            showScreen('screen-phase3'); enemies = []; warnings = []; gameState = 'ready'; countdownNum = 3; chaosModeActive = false; const frame = document.getElementById('game-frame'); frame.style.position = 'relative'; frame.style.left = 'auto'; frame.style.top = 'auto'; frame.classList.remove('chaos-shake'); document.body.style.display = 'flex'; if (gameMode === 'nightmare') { document.getElementById('stage-display').innerText = "☠ NIGHTMARE ☠"; setTheme('nightmare'); p3TotalTime = 60.00; currentPhase = 'nightmare'; } else { document.getElementById('stage-display').innerText = "3 - SURVIVAL"; setTheme('green'); p3TotalTime = 45.00; currentPhase = 'green'; } document.getElementById('dodge-timer').innerText = "READY..."; document.getElementById('break-overlay').style.display = 'none'; canvas.addEventListener('mousemove', (e) => { const rect = canvas.getBoundingClientRect(); player.x = e.clientX - rect.left; player.y = e.clientY - rect.top; }); 
+            showScreen('screen-phase3'); stopMainBGM(); enemies = []; warnings = []; gameState = 'survival'; countdownNum = 3; chaosModeActive = false; const frame = document.getElementById('game-frame'); frame.style.position = 'relative'; frame.style.left = 'auto'; frame.style.top = 'auto'; frame.classList.remove('chaos-shake'); document.body.style.display = 'flex'; if (gameMode === 'nightmare') { document.getElementById('stage-display').innerText = "☠ NIGHTMARE ☠"; setTheme('nightmare'); p3TotalTime = 60.00; currentPhase = 'nightmare'; } else { document.getElementById('stage-display').innerText = "3 - SURVIVAL"; setTheme('green'); p3TotalTime = 45.00; currentPhase = 'green'; } document.getElementById('dodge-timer').innerText = "READY..."; document.getElementById('break-overlay').style.display = 'none'; canvas.addEventListener('mousemove', (e) => { const rect = canvas.getBoundingClientRect(); player.x = e.clientX - rect.left; player.y = e.clientY - rect.top; }); 
             const countInterval = setInterval(() => { 
                 if (countdownNum > 0) { sfxClick(); document.getElementById('dodge-timer').innerText = `START IN ${countdownNum}...`; countdownNum--; } 
                 else { sfxStart(); startBGM(); clearInterval(countInterval); gameState = 'playing'; } 
@@ -447,7 +468,7 @@
 
         function gameLoop() {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = (gameMode === 'nightmare') ? "#b026ff" : "#ffffff"; if(chaosModeActive) ctx.fillStyle = "#00ffea"; ctx.shadowBlur = 10; ctx.shadowColor = ctx.fillStyle; ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size); ctx.shadowBlur = 0;
-            if (gameState === 'ready') { ctx.fillStyle = "#ffffff"; ctx.font = "40px VT323"; ctx.textAlign = "center"; ctx.fillText(countdownNum > 0 ? countdownNum : "GO!", canvas.width/2, canvas.height/2); gameLoopId = requestAnimationFrame(gameLoop); return; }
+            if (gameState === 'survival') { ctx.fillStyle = "#ffffff"; ctx.font = "40px VT323"; ctx.textAlign = "center"; ctx.fillText(countdownNum > 0 ? countdownNum : "GO!", canvas.width/2, canvas.height/2); gameLoopId = requestAnimationFrame(gameLoop); return; }
             p3TotalTime -= 0.016; document.getElementById('dodge-timer').innerText = p3TotalTime.toFixed(2);
             if (gameMode === 'nightmare') { if (p3TotalTime <= 30) { updateChaosFrame(); } if (p3TotalTime <= 0) { cancelAnimationFrame(gameLoopId); gameClear(); return; } }
             else { let newPhase = currentPhase; if (p3TotalTime > 30) newPhase = 'green'; else if (p3TotalTime > 25) newPhase = 'break1'; else if (p3TotalTime > 10) newPhase = 'yellow'; else if (p3TotalTime > 5) newPhase = 'break2'; else if (p3TotalTime > 0) newPhase = 'red'; else { cancelAnimationFrame(gameLoopId); gameClear(); return; } if (newPhase !== currentPhase) { currentPhase = newPhase; if (currentPhase === 'break1') { setTheme('break'); enemies=[]; warnings=[]; startTyping("SYSTEM UPGRADE..."); stopBGM(); } else if (currentPhase === 'break2') { setTheme('break'); enemies=[]; warnings=[]; startTyping("당신은 과연 이 이상을 깰 수 있을까?"); stopBGM(); } else if (currentPhase === 'green') { setTheme('green'); document.getElementById('break-overlay').style.display='none'; startBGM(); } else if (currentPhase === 'yellow') { setTheme('yellow'); document.getElementById('break-overlay').style.display='none'; startBGM(); } else if (currentPhase === 'red') { setTheme('red'); document.getElementById('break-overlay').style.display='none'; startBGM(); } } }
@@ -466,12 +487,12 @@
         }
 
         function failGame(title, desc) { 
-            stopBGM(); sfxHit(); // 데미지 폭발음
+            stopMainBGM(); stopBGM(); sfxHit();
             failCount++; localStorage.setItem('minority_fail_count', failCount); showScreen('screen-end'); setTheme('red'); document.getElementById('end-canvas').style.display = 'none'; document.getElementById('end-title').innerText = title; document.getElementById('end-title').className = "big-msg"; document.getElementById('end-title').style.color = "red"; document.getElementById('end-desc').innerText = desc; document.getElementById('shame-display').style.display = 'none'; if (failCount >= 5) document.getElementById('skip-btn').style.display = 'inline-block'; else document.getElementById('skip-btn').style.display = 'none'; clearInterval(p2TimerInterval); if(gameLoopId) cancelAnimationFrame(gameLoopId); 
         }
         function skipToEnding() { sfxClick(); localStorage.removeItem('minority_fail_count'); showScreen('screen-end'); setTheme('gray'); document.getElementById('end-canvas').style.display = 'none'; document.getElementById('skip-btn').style.display = 'none'; document.getElementById('end-title').innerText = "SKIPPED"; document.getElementById('end-title').className = "big-msg"; document.getElementById('end-title').style.color = "#888"; document.getElementById('end-desc').innerText = "평범한 결말입니다. 다시 도전하시겠습니까?"; }
         function gameClear() {
-            stopBGM(); sfxClear(); // 클리어 사운드
+            stopMainBGM(); stopBGM(); sfxClear(); 
             saveRecord(gameMode === 'nightmare'); localStorage.removeItem('minority_fail_count'); failCount = 0; if (gameMode === 'normal') localStorage.setItem('minority_game_cleared', 'true');
             showScreen('screen-end'); document.getElementById('skip-btn').style.display = 'none'; document.getElementById('end-canvas').style.display = 'block'; const titleEl = document.getElementById('end-title'); const descEl = document.getElementById('end-desc'); const statusEl = document.getElementById('status-display'); const shameEl = document.getElementById('shame-display');
             if (resetUsedCount > 0) { setTheme('coward'); titleEl.innerText = "COWARD"; titleEl.style.color = "#cd853f"; descEl.innerText = "당신은 기록을 세탁했습니다."; statusEl.innerText = "COWARD"; shameEl.style.display = 'inline-block'; shameEl.innerText = `RESET USED: ${resetUsedCount} TIMES`; }
